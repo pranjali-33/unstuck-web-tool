@@ -57,7 +57,7 @@ if st.button("Get My Next Move", type="primary"):
         st.error("AI Client configuration missing. Please verify your background credentials setup.")
     else:
         # Animated loading sequence to make the processing look fun
-        with st.spinner("🧠 De-cluttering your brain... applying structural framework..."):
+        with st.spinner("🧠 De-cluttering your brain..."):
             
             # Formulating a clean prompt combining the user task dump and energy level
             prompt_content = f"""
