@@ -4,7 +4,7 @@ import json
 from google import genai
 from google.genai import types
 
-# 1. Page Configuration
+# 1. Standard Page Setup
 st.set_page_config(
     page_title="Unstuck Engine",
     page_icon="⚡",
@@ -15,93 +15,96 @@ st.set_page_config(
 api_key = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key) if api_key else None
 
-# 3. Clean, Highly Readable Header (Zero styling code to prevent font clipping)
+# 3. Clean & Welcoming Header
 st.title("⚡ UNSTUCK")
-st.subheader("Task Allocation Engine")
+st.markdown("##### *Your personal momentum generator when you're staring at a blank screen.*")
 st.write("---")
 
-# 4. User-Friendly Input Layout
-st.markdown("### Step 1: Log Operational Constraints")
+# 4. Step 1: Getting the User's Problem
+st.markdown("### ✍️ Step 1: Brain Dump")
 user_dump = st.text_area(
-    "What specific task or deadline is causing an execution bottleneck right now?",
-    placeholder="Paste your raw mental dump, disorganized notes, or timeline pressure here...",
-    height=130
+    "What specific task, project, or deadline is keeping you stuck right now?",
+    placeholder="Type or paste what you're working on, raw thoughts, or what you are avoiding...",
+    height=130,
+    label_visibility="collapsed"
 )
 
 st.write(" ")
 
-st.markdown("### Step 2: Calibrate Execution Metrics")
+# 5. Step 2: Checking the Vibe
+st.markdown("### 📊 Step 2: Check Your Battery & Task")
 col1, col2 = st.columns(2)
 
 with col1:
+    st.markdown("**Your Current Energy Level:**")
     current_capacity = st.selectbox(
-        "Current Capacity / Energy Score:",
+        "Energy Selection",
         options=[
-            "1 - Low Energy (Fatigued / End of day)",
+            "1 - Low Energy (Feeling fried / End of the day)",
             "2 - Medium Energy (Standard operational focus)",
-            "3 - High Energy (Peak cognitive focus)"
-        ]
+            "3 - High Energy (Peak mental clarity / Locked in)"
+        ],
+        label_visibility="collapsed"
     )
 
 with col2:
+    st.markdown("**How Heavy is the Task?**")
     task_complexity = st.selectbox(
-        "Task Complexity Score:",
+        "Complexity Selection",
         options=[
-            "1 - Low Complexity (Routine / Clear steps)",
-            "2 - Medium Complexity (Multi-step Process)",
-            "3 - High Complexity (Ambiguous / Strategic project)"
-        ]
+            "1 - Light (Routine / Clear next steps)",
+            "2 - Medium (Multi-step project / A bit messy)",
+            "3 - Heavy (Vague / Requires deep strategic focus)"
+        ],
+        label_visibility="collapsed"
     )
 
 st.write(" ")
-
-# FIX 3: Behavior Validation Signal Metric
+st.markdown("**Before we optimize, let's lock in a baseline:**")
 pre_likelihood = st.slider(
-    "Pre-Intervention: How likely are you to initiate this task in the next 15 minutes?",
+    "On a scale of 1-10, how likely are you to actually start this task in the next 15 minutes?",
     min_value=1,
     max_value=10,
     value=5
 )
 
-# --- THE PROPRIETARY DECISION MODEL MECHANICS ---
+# --- BACKEND BRAIN (Hidden from user, processed automatically) ---
 cap_score = int(current_capacity[0])
 comp_score = int(task_complexity[0])
 strategy_delta = cap_score - comp_score
 
+# Dynamic messaging with a supportive, clear personality
 if strategy_delta < 0:
     allocation_quadrant = "STRATEGIC DEEP WORK PARALYSIS"
-    system_directive = "COMPLEXITY MISMATCH: High friction detected. Task architecture must be reduced."
-    q_label = "STRATEGIC DEEP WORK (Friction Freeze)"
-    prompt_instruction = "The system flags a capacity deficit. Decompose this task into an absurdly simple micro-task executable in under 5 minutes."
+    vibe_heading = "🚨 Friction Freeze Alert!"
+    vibe_message = "You are trying to climb a mountain on an empty tank. Because your energy is lower than the task weight, your brain is freezing up. We are forcing the system to chop this down into a tiny, 5-minute action step to get you moving."
+    prompt_instruction = "The system flags a capacity deficit. Break this down into an absurdly simple micro-task executable in under 5 minutes."
 elif strategy_delta > 0:
     allocation_quadrant = "QUICK WINS / EXCESS CAPACITY"
-    system_directive = "VELOCITY OPPORTUNITY: Energy reserves exceed complexity. Immediate acceleration recommended."
-    q_label = "QUICK WINS (High Acceleration)"
+    vibe_heading = "🚀 Clear Skies Ahead!"
+    vibe_message = "You've got plenty of fuel and a clear road. Your energy levels are higher than the friction of this task. Let’s strike while the iron is hot and get an immediate momentum step on the board."
+    prompt_instruction = "The user has high energy relative to the task. Give them an immediate, high-momentum starting action."
 else:
     allocation_quadrant = "BALANCED OPERATIONAL STATE"
-    system_directive = "EQUILIBRIUM: Complexity matches energy. Provide a clear entry point."
-    q_label = "OPERATIONAL MOMENTUM (Balanced State)"
+    vibe_heading = "⚖️ Perfect Balance."
+    vibe_message = "You are completely in sync. Your energy matches the complexity perfectly—you just need a clear, logical doorway to walk through. Let's find your exact starting point."
+    prompt_instruction = "Energy and complexity match perfectly. Provide a clean, logical first step to initiate focus."
 
-# 5. Clean, Professional Metric Grid Layout
+# 6. Step 3: Clean, Friendly Vibe Diagnostic Box
 st.write("---")
-st.markdown("### 📊 Active Framework Mapping")
+with st.container(border=True):
+    st.markdown(f"### {vibe_heading}")
+    st.write(vibe_message)
 
-# Render metrics in an elegant, structured grid layout instead of an ugly raw code block
-m_col1, m_col2 = st.columns(2)
-with m_col1:
-    st.metric(label="Calculated Allocation Quadrant", value=q_label)
-with m_col2:
-    st.metric(label="Calculated Model Delta Score", value=f"{strategy_delta} (Cap vs Comp)")
-
-# 6. Action Execution Protocol Button
+# 7. Action Optimization Button
 st.write(" ")
-if st.button("Optimize Task Allocation", type="primary", use_container_width=True):
+if st.button("Generate My Next Move", type="primary", use_container_width=True):
     if not client:
         st.error("Authentication Error: API Key missing in environment.")
     elif not user_dump.strip():
-        st.warning("Input Verification Failed: Please provide constraint data to analyze.")
+        st.warning("Please type something in Step 1 so we can build your action step!")
     else:
-        with st.spinner("Processing allocation formulas..."):
+        with st.spinner("Analyzing your parameters..."):
             try:
                 system_instruction = (
                     "You are an operational language parser. Your single job is to translate messy human prose into clear execution steps. "
@@ -112,7 +115,6 @@ if st.button("Optimize Task Allocation", type="primary", use_container_width=Tru
                 prompt_content = f"""
                 User Input Task: "{user_dump}"
                 System Computed Quadrant: {allocation_quadrant}
-                System Directive: {system_directive}
                 Target Strategy Rule: {prompt_instruction}
                 
                 Return this exact JSON schema:
@@ -135,15 +137,19 @@ if st.button("Optimize Task Allocation", type="primary", use_container_width=Tru
                 
                 data = json.loads(response.text)
                 
-                # Cleaned, Professional Output Cockpit using native styling parameters
+                # Friendly, Motivational Output Design
                 st.write("---")
-                st.markdown("### ⚡ I. System Allocation Assessment")
-                st.warning(f"**Model Diagnostic:** {system_directive}")
-                st.info(f"**Scope Analysis:** {data['fact_assessment']}")
+                st.markdown("### ⚡ Your Custom Action Plan")
                 
-                st.markdown("### 🚀 II. Core Initialization Action")
-                st.success(f"**Target Micro-Step (Execute Within 15 Minutes):**\n\n### {data['momentum_task']}")
-                st.markdown(f"**Behavioral Rationale:** {data['task_rationale']}")
+                with st.container(border=True):
+                    st.markdown("#### **🔍 The Reality Check**")
+                    st.info(data['fact_assessment'])
+                    
+                    st.markdown("#### **🏃‍♂️ Your Immediate 15-Minute Micro-Step**")
+                    st.success(f"**{data['momentum_task']}**")
+                    
+                    st.markdown("#### **💡 Why This Works Right Now**")
+                    st.write(data['task_rationale'])
                 
             except Exception as e:
-                st.error(f"Processing Error. Technical Trace: {str(e)}")
+                st.error(f"Something went wrong under the hood. Details: {str(e)}")
