@@ -11,7 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Apply styling parameters cleanly without using multi-line triple quote blocks
+# Apply styling parameters cleanly using native HTML tags
 st.html("""
     <style>
     .main { background-color: #0f172a; }
@@ -34,6 +34,12 @@ st.html("""
         color: #94a3b8;
         line-height: 1.2;
     }
+    .reframe-card {
+        background-color: #0f172a; 
+        padding: 20px; 
+        border-radius: 8px; 
+        border: 1px solid #1e293b;
+    }
     h1, h2, h3, h4, p, label, span { color: #f8fafc !important; }
     </style>
 """)
@@ -42,9 +48,9 @@ st.html("""
 api_key = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key) if api_key else None
 
-# 3. Premium Header Section
-st.markdown("<h1 style='text-align: center;'>⚡ UNSTUCK</h1>", unsafe_with_html=True)
-st.markdown("<p style='text-align: center; color: #94a3b8; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.8rem;'>Cognitive Velocity Engine • Ver. 2.0</p>", unsafe_with_html=True)
+# 3. Streamlit Native Header Section (Fixing the Type Errors)
+st.title("⚡ UNSTUCK")
+st.caption("COGNITIVE VELOCITY ENGINE • BEHAVIORAL DECISION-SUPPORT")
 st.write("---")
 
 # 4. Structured Decision Inputs
@@ -138,7 +144,7 @@ if st.button("Execute Framework Optimization", type="primary"):
                 # I. The Clinical Blueprint
                 st.markdown("#### ⚡ I. System Reframe")
                 st.markdown(f"""
-                    <div style='background-color: #0f172a; padding: 20px; border-radius: 8px; border: 1px solid #1e293b;'>
+                    <div class='reframe-card'>
                         <p style='color: #94a3b8; font-size: 0.9rem; margin: 0;'><strong>ASSESSMENT:</strong> {data['fact_assessment']}</p>
                         <p style='color: #f8fafc; font-size: 1rem; margin-top: 10px; margin-bottom: 0;'><strong>DIRECTIVE:</strong> {data['cognitive_shift']}</p>
                     </div>
@@ -149,7 +155,7 @@ if st.button("Execute Framework Optimization", type="primary"):
                 st.markdown(f"""
                     <div class='metric-card'>
                         <span style='font-size: 0.75rem; color: #6366f1; font-weight: bold; text-transform: uppercase;'>Primary Momentum Task</span>
-                        <h2 style='margin-top: 10px; margin-bottom: 15px; color: #ffffff !important;'>{data['momentum_task']}</h2>
+                        <h2 style='margin-top: 10px; margin-bottom: 15px;'>{data['momentum_task']}</h2>
                         <p style='color: #94a3b8; font-size: 0.85rem; font-style: italic; margin: 0;'><strong>Rationale:</strong> {data['clinical_rationale']}</p>
                     </div>
                 """, unsafe_with_html=True)
