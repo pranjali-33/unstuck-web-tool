@@ -12,38 +12,43 @@ st.set_page_config(
     layout="centered"
 )
 
-# 2. Initialize official Google GenAI Client
-api_key = os.environ.get("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key) if api_key else None
+# 2. Crash-Proof API Connection (Using Cache to prevent 429 Errors)
+@st.cache_resource
+def get_genai_client():
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if api_key:
+        return genai.Client(api_key=api_key)
+    return None
 
-# 3. Clean, Human-Centric Title
+client = get_genai_client()
+
+# 3. Clean, Minimal Header (Zero marketing fluff)
 st.title("⚡ UNSTUCK")
-st.markdown("##### **Deconstruct the friction. Find your entry point.**")
 st.write("---")
 
-# 4. Step 1: Input Section
-st.markdown("### **Step 1: What are you actively avoiding?**")
+# 4. Step 1: Normal, Everyday Human Input Prompt
+st.markdown("### **Step 1: What task is on your plate right now?**")
 user_dump = st.text_area(
-    "Be brutally honest. What is the actual task, and what is the current execution bottleneck?",
-    placeholder="e.g., 'I need to build this slide deck but I'm completely overwhelmed by the raw data and don't know where to start...'",
+    "Task Input Box",
+    placeholder="What project, file, or decision are you trying to tackle? Jot down the details or your raw thoughts here...",
     height=130,
     label_visibility="collapsed"
 )
 
 st.write(" ")
 
-# 5. Step 2: Diagnostic Calibration
+# 5. Step 2: Realistic Resource Check
 st.markdown("### **Step 2: Reality Check**")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("**Your actual energy level right now:**")
+    st.markdown("**Your energy level right now:**")
     current_capacity = st.selectbox(
         "Energy Selection",
         options=[
-            "1 - Running on fumes (Fried / Exhausted)",
-            "2 - Normal operational capacity (Standard day)",
-            "3 - Highly focused (Locked in / Peak clarity)"
+            "1 - Running on fumes (Tired / Exhausted)",
+            "2 - Normal capacity (Standard operational focus)",
+            "3 - Highly focused (Ready to work but directionless)"
         ],
         label_visibility="collapsed"
     )
@@ -53,9 +58,9 @@ with col2:
     task_complexity = st.selectbox(
         "Complexity Selection",
         options=[
-            "1 - Lightweight (Routine / Clear formatting)",
-            "2 - Medium heavy (Messy / Needs thinking)",
-            "3 - Intimidating (Ambiguous / High pressure)"
+            "1 - Lightweight (Straightforward / Routine steps)",
+            "2 - Medium heavy (Messy scope / Needs thinking)",
+            "3 - Intimidating (Vague / High stakes project)"
         ],
         label_visibility="collapsed"
     )
@@ -70,43 +75,43 @@ pre_likelihood = st.slider(
     label_visibility="collapsed"
 )
 
-# --- INTERNAL MODEL MECHANICS (Processed automatically behind the scenes) ---
+# --- INTERNAL MODEL MECHANICS ---
 cap_score = int(current_capacity[0])
 comp_score = int(task_complexity[0])
 strategy_delta = cap_score - comp_score
 
-# Grounded, direct status messaging matching your core behavioral model rules
+# Direct, grounded situational diagnosis text
 if strategy_delta < 0:
     allocation_quadrant = "STRATEGIC DEEP WORK PARALYSIS"
-    vibe_heading = "Friction Freeze"
-    vibe_message = "You're trying to climb a mountain on an empty tank. Because the task complexity outpaces your current energy, your brain is actively hitting the brakes. We are overriding this freeze by aggressively slicing the task down into an absurdly simple, 5-minute physical action step."
+    vibe_heading = "Diagnosis: Friction Freeze"
+    vibe_message = "You're trying to climb a mountain on an empty tank. Because the task is heavier than your current energy level, your brain is putting on the brakes. We are going to step in and slice this down into an incredibly simple, 5-minute physical action step to get you moving effortlessly."
     prompt_instruction = "The system flags a capacity deficit. Break this down into an absurdly simple micro-task executable in under 5 minutes."
 elif strategy_delta > 0:
     allocation_quadrant = "QUICK WINS / EXCESS CAPACITY"
-    vibe_heading = "High Velocity Lane"
-    vibe_message = "You have plenty of fuel and a clear road ahead. Your energy outmatches the baseline friction of this task. Let's take immediate advantage of this cognitive window and get a high-momentum action item locked down right now."
+    vibe_heading = "Diagnosis: High-Velocity Lane"
+    vibe_message = "You have plenty of fuel and a clear road ahead. Your energy outmatches the friction of this task. Let's take immediate advantage of this window and lock down a quick, high-momentum action item right now."
     prompt_instruction = "The user has high energy relative to the task. Give them an immediate, high-momentum starting action."
 else:
     allocation_quadrant = "BALANCED OPERATIONAL STATE"
-    vibe_heading = "Clear Entry Point Needed"
-    vibe_message = "You actually have exactly what it takes to execute this task right now—your energy matches the weight perfectly. You aren't stuck because you're tired; you're just stuck at the starting threshold. Let's isolate your exact opening sequence."
+    vibe_heading = "Diagnosis: Clear Entry Point Needed"
+    vibe_message = "You have exactly what it takes to execute this task right now—your energy matches the project weight perfectly. You aren't stuck because you're tired; you're just stuck at the starting threshold. Let's isolate the precise first step to get you through the door."
     prompt_instruction = "Energy and complexity match perfectly. Provide a clean, logical first step to initiate focus."
 
-# 6. Dynamic Diagnostics Container
+# 6. Step 3: Clean Diagnostics Container
 st.write("---")
 with st.container(border=True):
-    st.markdown(f"#### **System Diagnosis: {vibe_heading}**")
+    st.markdown(f"#### **{vibe_heading}**")
     st.write(vibe_message)
 
-# 7. Optimization Action Trigger
+# 7. Action Optimization Button
 st.write(" ")
 if st.button("Give Me My First Action Step", type="primary", use_container_width=True):
     if not client:
         st.error("Authentication Error: API Key missing in dashboard settings.")
     elif not user_dump.strip():
-        st.warning("Please dump your raw thoughts in Step 1 first so we can map out your action step.")
+        st.warning("Please enter your task details in Step 1 first so we can map out your entry point.")
     else:
-        with st.spinner("Cutting through the friction..."):
+        with st.spinner("Calculating starting path..."):
             try:
                 system_instruction = (
                     "You are an operational language parser. Your single job is to translate messy human prose into clear execution steps. "
@@ -139,9 +144,9 @@ if st.button("Give Me My First Action Step", type="primary", use_container_width
                 
                 data = json.loads(response.text)
                 
-                # Polished, Non-Truncated Action Roadmap Presentation
+                # Polished, Professional Output Design
                 st.write("---")
-                st.markdown("### **⚡ Your Momentum Roadmap**")
+                st.markdown("### **⚡ Your Action Roadmap**")
                 
                 with st.container(border=True):
                     st.markdown("##### **The Reality Check**")
@@ -155,15 +160,13 @@ if st.button("Give Me My First Action Step", type="primary", use_container_width
                     st.markdown("##### **Why This Works Right Now**")
                     st.caption(data['task_rationale'])
             
-            # DEFENSIVE OVERLOAD HANDLING: Catches rate caps beautifully
             except APIError as api_err:
                 if "429" in str(api_err) or "RESOURCE_EXHAUSTED" in str(api_err):
                     st.write("---")
                     st.warning(
                         "**Server Traffic Intercept**\n\n"
-                        "A few alpha testers are pushing momentum calculations at the exact same moment. "
-                        "Because we are on the public tier, the server is cooling down. "
-                        "Please wait exactly 60 seconds and click 'Give Me My First Action Step' again."
+                        "Multiple users are calculating workflows simultaneously. "
+                        "To protect our free server limits, please wait 60 seconds and click the button again."
                     )
                 else:
                     st.error(f"API Connection Error: {str(api_err)}")
