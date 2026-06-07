@@ -11,12 +11,12 @@ st.set_page_config(
     layout="centered"
 )
 
-# Custom CSS for the 'Unique Personality' interface
-st.markdown("""
+# Apply styling parameters cleanly without using multi-line triple quote blocks
+st.html("""
     <style>
     .main { background-color: #0f172a; }
-    .stTextArea textarea { background-color: #1e293b; color: #f8fafc; border: 1px solid #334155; }
-    .stSelectbox div { background-color: #1e293b; color: #f8fafc; }
+    textarea { background-color: #1e293b !important; color: #f8fafc !important; border: 1px solid #334155 !important; }
+    select { background-color: #1e293b !important; color: #f8fafc !important; }
     .metric-card {
         background-color: #1e293b;
         padding: 24px;
@@ -26,7 +26,7 @@ st.markdown("""
         margin-top: 20px;
     }
     .matrix-display {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: monospace;
         background-color: #020617;
         padding: 20px;
         border-radius: 8px;
@@ -34,9 +34,9 @@ st.markdown("""
         color: #94a3b8;
         line-height: 1.2;
     }
-    h1, h2, h3, h4 { color: #f8fafc !important; }
+    h1, h2, h3, h4, p, label, span { color: #f8fafc !important; }
     </style>
-""", unsafe_with_html=True)
+""")
 
 # 2. Initialize official Google GenAI Client
 api_key = os.environ.get("GEMINI_API_KEY")
@@ -139,8 +139,8 @@ if st.button("Execute Framework Optimization", type="primary"):
                 st.markdown("#### ⚡ I. System Reframe")
                 st.markdown(f"""
                     <div style='background-color: #0f172a; padding: 20px; border-radius: 8px; border: 1px solid #1e293b;'>
-                        <p style='color: #94a3b8; font-size: 0.9rem;'><strong>ASSESSMENT:</strong> {data['fact_assessment']}</p>
-                        <p style='color: #f8fafc; font-size: 1rem; margin-top: 10px;'><strong>DIRECTIVE:</strong> {data['cognitive_shift']}</p>
+                        <p style='color: #94a3b8; font-size: 0.9rem; margin: 0;'><strong>ASSESSMENT:</strong> {data['fact_assessment']}</p>
+                        <p style='color: #f8fafc; font-size: 1rem; margin-top: 10px; margin-bottom: 0;'><strong>DIRECTIVE:</strong> {data['cognitive_shift']}</p>
                     </div>
                 """, unsafe_with_html=True)
                 
@@ -149,8 +149,8 @@ if st.button("Execute Framework Optimization", type="primary"):
                 st.markdown(f"""
                     <div class='metric-card'>
                         <span style='font-size: 0.75rem; color: #6366f1; font-weight: bold; text-transform: uppercase;'>Primary Momentum Task</span>
-                        <h2 style='margin-top: 10px; margin-bottom: 15px;'>{data['momentum_task']}</h2>
-                        <p style='color: #94a3b8; font-size: 0.85rem; font-style: italic;'><strong>Rationale:</strong> {data['clinical_rationale']}</p>
+                        <h2 style='margin-top: 10px; margin-bottom: 15px; color: #ffffff !important;'>{data['momentum_task']}</h2>
+                        <p style='color: #94a3b8; font-size: 0.85rem; font-style: italic; margin: 0;'><strong>Rationale:</strong> {data['clinical_rationale']}</p>
                     </div>
                 """, unsafe_with_html=True)
                 
