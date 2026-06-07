@@ -4,112 +4,104 @@ import json
 from google import genai
 from google.genai import types
 
-# 1. System & Page Configuration
+# 1. Page Configuration
 st.set_page_config(
     page_title="Unstuck Engine",
     page_icon="⚡",
     layout="centered"
 )
 
-# Apply styling parameters cleanly using native HTML tags (Safe blocks only)
-st.html("""
-    <style>
-    .main { background-color: #0f172a; }
-    textarea { background-color: #1e293b !important; color: #f8fafc !important; border: 1px solid #334155 !important; }
-    select { background-color: #1e293b !important; color: #f8fafc !important; }
-    .metric-card {
-        background-color: #1e293b;
-        padding: 24px;
-        border-radius: 12px;
-        border: 1px solid #334155;
-        border-top: 4px solid #6366f1;
-        margin-top: 20px;
-    }
-    .reframe-card {
-        background-color: #0f172a; 
-        padding: 20px; 
-        border-radius: 8px; 
-        border: 1px solid #1e293b;
-    }
-    h1, h2, h3, h4, p, label, span { color: #f8fafc !important; }
-    </style>
-""")
-
 # 2. Initialize official Google GenAI Client
 api_key = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key) if api_key else None
 
-# 3. Streamlit Native Header Section
+# 3. Clean, Highly Readable Header (Zero styling code to prevent font clipping)
 st.title("⚡ UNSTUCK")
-st.caption("STRUCTURAL TASK ALLOCATION ENGINE • MATRIX SYSTEM LOGIC")
+st.subheader("Task Allocation Engine")
 st.write("---")
 
-# 4. Structured Decision Inputs
+# 4. User-Friendly Input Layout
+st.markdown("### Step 1: Log Operational Constraints")
 user_dump = st.text_area(
-    "Log Task Description and Perceived Execution Blocks:",
-    placeholder="Describe the task and what is causing the initiation bottleneck...",
-    height=120
+    "What specific task or deadline is causing an execution bottleneck right now?",
+    placeholder="Paste your raw mental dump, disorganized notes, or timeline pressure here...",
+    height=130
 )
 
+st.write(" ")
+
+st.markdown("### Step 2: Calibrate Execution Metrics")
 col1, col2 = st.columns(2)
+
 with col1:
     current_capacity = st.selectbox(
-        "User Current Energy / Capacity Score:",
-        ["1 - Low Energy (End of day / Fatigue)", "2 - Medium Energy (Standard operational focus)", "3 - High Energy (Peak cognitive state)"]
+        "Current Capacity / Energy Score:",
+        options=[
+            "1 - Low Energy (Fatigued / End of day)",
+            "2 - Medium Energy (Standard operational focus)",
+            "3 - High Energy (Peak cognitive focus)"
+        ]
     )
+
 with col2:
     task_complexity = st.selectbox(
         "Task Complexity Score:",
-        ["1 - Low Complexity (Routine / Clear execution steps)", "2 - Medium Complexity (Multi-step / Disorganized)", "3 - High Complexity (Ambiguous / High strategic weight)"]
+        options=[
+            "1 - Low Complexity (Routine / Clear steps)",
+            "2 - Medium Complexity (Multi-step Process)",
+            "3 - High Complexity (Ambiguous / Strategic project)"
+        ]
     )
 
-# Pre-test Behavioral Signal Metric
 st.write(" ")
-pre_likelihood = st.slider("Pre-Intervention: How likely are you to initiate this task in the next 15 minutes? (Scale 1-10)", 1, 10, 5)
 
-# --- THE PROPRIETARY MATHEMATICAL MODEL ---
+# FIX 3: Behavior Validation Signal Metric
+pre_likelihood = st.slider(
+    "Pre-Intervention: How likely are you to initiate this task in the next 15 minutes?",
+    min_value=1,
+    max_value=10,
+    value=5
+)
+
+# --- THE PROPRIETARY DECISION MODEL MECHANICS ---
 cap_score = int(current_capacity[0])
 comp_score = int(task_complexity[0])
 strategy_delta = cap_score - comp_score
 
 if strategy_delta < 0:
     allocation_quadrant = "STRATEGIC DEEP WORK PARALYSIS"
-    system_directive = "COMPLEXITY MISMATCH: High friction detected. Task architecture must be aggressively stripped down to prevent executive freeze."
-    q_marker = "[X] STRATEGIC DEEP WORK (Friction Freeze)"
-    prompt_instruction = "The system has flagged a deficit in capacity. You must decompose this task into an absurdly simple, low-friction micro-task executable in under 5 minutes."
+    system_directive = "COMPLEXITY MISMATCH: High friction detected. Task architecture must be reduced."
+    q_label = "STRATEGIC DEEP WORK (Friction Freeze)"
+    prompt_instruction = "The system flags a capacity deficit. Decompose this task into an absurdly simple micro-task executable in under 5 minutes."
 elif strategy_delta > 0:
     allocation_quadrant = "QUICK WINS / EXCESS CAPACITY"
-    system_directive = "VELOCITY OPPORTUNITY: Low friction detected. Energy reserves exceed task complexity. Immediate acceleration recommended."
-    q_marker = "[X] QUICK WINS (High Acceleration)"
+    system_directive = "VELOCITY OPPORTUNITY: Energy reserves exceed complexity. Immediate acceleration recommended."
+    q_label = "QUICK WINS (High Acceleration)"
 else:
     allocation_quadrant = "BALANCED OPERATIONAL STATE"
-    system_directive = "EQUILIBRIUM: Task complexity matches energy levels. Clear entry point required to initiate standard execution cycle."
-    q_marker = "[X] OPERATIONAL MOMENTUM (Balanced)"
+    system_directive = "EQUILIBRIUM: Complexity matches energy. Provide a clear entry point."
+    q_label = "OPERATIONAL MOMENTUM (Balanced State)"
 
-# 5. The Visual Matrix Grid Presentation (Using native st.code to completely eliminate TypeErrors)
-st.markdown("### 📊 System Framework Mapping")
-matrix_visual = f"""
-         HIGH COMPLEXITY / HIGH VALUE
-                     ▲
-                     │
-    [ ] QUICK WINS    │   {q_marker if strategy_delta < 0 else "[ ] STRATEGIC DEEP WORK"}
-                     │
-LOW CAPACITY ────────┼────────────────► HIGH CAPACITY
-                     │
-    {q_marker if strategy_delta >= 0 else "[ ] OPERATIONAL CHORES"} │   [ ] COMPLEX DISTRACTIONS
-                     ▼
-          LOW COMPLEXITY / ROUTINE
-"""
-st.code(matrix_visual, language="text")
+# 5. Clean, Professional Metric Grid Layout
+st.write("---")
+st.markdown("### 📊 Active Framework Mapping")
 
-# 6. AI Execution Protocol
-if st.button("Optimize Task Allocation", type="primary"):
+# Render metrics in an elegant, structured grid layout instead of an ugly raw code block
+m_col1, m_col2 = st.columns(2)
+with m_col1:
+    st.metric(label="Calculated Allocation Quadrant", value=q_label)
+with m_col2:
+    st.metric(label="Calculated Model Delta Score", value=f"{strategy_delta} (Cap vs Comp)")
+
+# 6. Action Execution Protocol Button
+st.write(" ")
+if st.button("Optimize Task Allocation", type="primary", use_container_width=True):
     if not client:
         st.error("Authentication Error: API Key missing in environment.")
     elif not user_dump.strip():
-        st.warning("Input Required: Please provide task details for analysis.")
+        st.warning("Input Verification Failed: Please provide constraint data to analyze.")
     else:
-        with st.spinner("Calculating allocation vectors..."):
+        with st.spinner("Processing allocation formulas..."):
             try:
                 system_instruction = (
                     "You are an operational language parser. Your single job is to translate messy human prose into clear execution steps. "
@@ -142,26 +134,16 @@ if st.button("Optimize Task Allocation", type="primary"):
                 )
                 
                 data = json.loads(response.text)
+                
+                # Cleaned, Professional Output Cockpit using native styling parameters
                 st.write("---")
+                st.markdown("### ⚡ I. System Allocation Assessment")
+                st.warning(f"**Model Diagnostic:** {system_directive}")
+                st.info(f"**Scope Analysis:** {data['fact_assessment']}")
                 
-                # I. The Structural Resource Assessment
-                st.markdown("#### ⚡ I. Structural Resource Assessment")
-                st.markdown(f"""
-                    <div class='reframe-card'>
-                        <p style='color: #94a3b8; font-size: 0.9rem; margin: 0;'><strong>CORE BLOCK:</strong> {system_directive}</p>
-                        <p style='color: #f8fafc; font-size: 1rem; margin-top: 10px; margin-bottom: 0;'><strong>SCOPE ANALYSIS:</strong> {data['fact_assessment']}</p>
-                    </div>
-                """, unsafe_with_html=True)
-                
-                # II. The Target Action
-                st.markdown("#### 🚀 II. Core Initialization Action")
-                st.markdown(f"""
-                    <div class='metric-card'>
-                        <span style='font-size: 0.75rem; color: #6366f1; font-weight: bold; text-transform: uppercase;'>Calculated Next Micro-Step</span>
-                        <h2 style='margin-top: 10px; margin-bottom: 15px;'>{data['momentum_task']}</h2>
-                        <p style='color: #94a3b8; font-size: 0.85rem; margin: 0;'><strong>Reasoning:</strong> {data['task_rationale']}</p>
-                    </div>
-                """, unsafe_with_html=True)
+                st.markdown("### 🚀 II. Core Initialization Action")
+                st.success(f"**Target Micro-Step (Execute Within 15 Minutes):**\n\n### {data['momentum_task']}")
+                st.markdown(f"**Behavioral Rationale:** {data['task_rationale']}")
                 
             except Exception as e:
-                st.error(f"Processing Fault. Trace: {str(e)}")
+                st.error(f"Processing Error. Technical Trace: {str(e)}")
