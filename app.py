@@ -4,14 +4,14 @@ import json
 from google import genai
 from google.genai import types
 
-# 1. Custom Premium Aesthetic Styling
+# 1. System & Page Configuration
 st.set_page_config(
     page_title="Unstuck Engine",
     page_icon="⚡",
     layout="centered"
 )
 
-# Apply styling parameters cleanly using native HTML tags
+# Apply styling parameters cleanly using native HTML tags (Safe blocks only)
 st.html("""
     <style>
     .main { background-color: #0f172a; }
@@ -24,15 +24,6 @@ st.html("""
         border: 1px solid #334155;
         border-top: 4px solid #6366f1;
         margin-top: 20px;
-    }
-    .matrix-display {
-        font-family: monospace;
-        background-color: #020617;
-        padding: 20px;
-        border-radius: 8px;
-        border: 1px solid #1e293b;
-        color: #94a3b8;
-        line-height: 1.2;
     }
     .reframe-card {
         background-color: #0f172a; 
@@ -48,83 +39,95 @@ st.html("""
 api_key = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key) if api_key else None
 
-# 3. Streamlit Native Header Section (Fixing the Type Errors)
+# 3. Streamlit Native Header Section
 st.title("⚡ UNSTUCK")
-st.caption("COGNITIVE VELOCITY ENGINE • BEHAVIORAL DECISION-SUPPORT")
+st.caption("STRUCTURAL TASK ALLOCATION ENGINE • MATRIX SYSTEM LOGIC")
 st.write("---")
 
 # 4. Structured Decision Inputs
 user_dump = st.text_area(
-    "Log Operational Constraints / Mental Dump:",
-    placeholder="What exactly is the bottleneck? Paste raw notes or schedule conflict details...",
-    height=150
+    "Log Task Description and Perceived Execution Blocks:",
+    placeholder="Describe the task and what is causing the initiation bottleneck...",
+    height=120
 )
 
 col1, col2 = st.columns(2)
 with col1:
-    task_category = st.selectbox(
-        "Context Domain:",
-        ["Professional / Work", "Academic / Case Prep", "Personal Administration"]
+    current_capacity = st.selectbox(
+        "User Current Energy / Capacity Score:",
+        ["1 - Low Energy (End of day / Fatigue)", "2 - Medium Energy (Standard operational focus)", "3 - High Energy (Peak cognitive state)"]
     )
 with col2:
-    cognitive_weight = st.selectbox(
-        "Perceived Complexity:",
-        ["Low (Routine Execution)", "Medium (Multi-step Process)", "High (Strategic Ambiguity)"]
+    task_complexity = st.selectbox(
+        "Task Complexity Score:",
+        ["1 - Low Complexity (Routine / Clear execution steps)", "2 - Medium Complexity (Multi-step / Disorganized)", "3 - High Complexity (Ambiguous / High strategic weight)"]
     )
 
-# 5. The Visual Matrix (Interactive Framework Logic)
-st.markdown("### 📊 Active Framework Mapping")
+# Pre-test Behavioral Signal Metric
+st.write(" ")
+pre_likelihood = st.slider("Pre-Intervention: How likely are you to initiate this task in the next 15 minutes? (Scale 1-10)", 1, 10, 5)
 
-# Logic to highlight the current quadrant in the matrix
-q1, q2, q3, q4 = "  ", "  ", "  ", "  "
-if "High" in cognitive_weight:
-    q2 = "▣" # Strategic Deep Work
-elif "Low" in cognitive_weight:
-    q1 = "▣" # Quick Wins
+# --- THE PROPRIETARY MATHEMATICAL MODEL ---
+cap_score = int(current_capacity[0])
+comp_score = int(task_complexity[0])
+strategy_delta = cap_score - comp_score
+
+if strategy_delta < 0:
+    allocation_quadrant = "STRATEGIC DEEP WORK PARALYSIS"
+    system_directive = "COMPLEXITY MISMATCH: High friction detected. Task architecture must be aggressively stripped down to prevent executive freeze."
+    q_marker = "[X] STRATEGIC DEEP WORK (Friction Freeze)"
+    prompt_instruction = "The system has flagged a deficit in capacity. You must decompose this task into an absurdly simple, low-friction micro-task executable in under 5 minutes."
+elif strategy_delta > 0:
+    allocation_quadrant = "QUICK WINS / EXCESS CAPACITY"
+    system_directive = "VELOCITY OPPORTUNITY: Low friction detected. Energy reserves exceed task complexity. Immediate acceleration recommended."
+    q_marker = "[X] QUICK WINS (High Acceleration)"
 else:
-    q3 = "▣" # Operational Momentum
+    allocation_quadrant = "BALANCED OPERATIONAL STATE"
+    system_directive = "EQUILIBRIUM: Task complexity matches energy levels. Clear entry point required to initiate standard execution cycle."
+    q_marker = "[X] OPERATIONAL MOMENTUM (Balanced)"
 
+# 5. The Visual Matrix Grid Presentation (Using native st.code to completely eliminate TypeErrors)
+st.markdown("### 📊 System Framework Mapping")
 matrix_visual = f"""
-         HIGH VALUE / STRATEGIC IMPACT
+         HIGH COMPLEXITY / HIGH VALUE
                      ▲
                      │
-    {q1} QUICK WINS    │   {q2} STRATEGIC DEEP WORK
-    (Low Friction)   │   (High Friction)
+    [ ] QUICK WINS    │   {q_marker if strategy_delta < 0 else "[ ] STRATEGIC DEEP WORK"}
                      │
-LOW FRICTION ────────┼────────────────► HIGH FRICTION
+LOW CAPACITY ────────┼────────────────► HIGH CAPACITY
                      │
-    {q3} OPERATIONAL  │   {q4} COMPLEX
-         MOMENTUM    │        DISTRACTIONS
+    {q_marker if strategy_delta >= 0 else "[ ] OPERATIONAL CHORES"} │   [ ] COMPLEX DISTRACTIONS
                      ▼
-          LOW VALUE / TACTICAL NOISE
+          LOW COMPLEXITY / ROUTINE
 """
-st.markdown(f"<div class='matrix-display'><pre>{matrix_visual}</pre></div>", unsafe_with_html=True)
+st.code(matrix_visual, language="text")
 
 # 6. AI Execution Protocol
-if st.button("Execute Framework Optimization", type="primary"):
+if st.button("Optimize Task Allocation", type="primary"):
     if not client:
         st.error("Authentication Error: API Key missing in environment.")
     elif not user_dump.strip():
         st.warning("Input Required: Please provide task details for analysis.")
     else:
-        with st.spinner("Decoding cognitive variables..."):
+        with st.spinner("Calculating allocation vectors..."):
             try:
                 system_instruction = (
-                    "You are a behavioral data analyst for a performance consulting firm. "
-                    "Analyze the user's unstructured input through the lens of cognitive friction. "
-                    "Strip emotional noise. Output strictly raw JSON. No conversational text."
+                    "You are an operational language parser. Your single job is to translate messy human prose into clear execution steps. "
+                    "You do not decide the strategy; the system code has already computed the allocation rules. "
+                    "Output strictly raw JSON matching the schema requested. No conversational filler."
                 )
                 
                 prompt_content = f"""
-                User Input: "{user_dump}"
-                Context: {task_category} | Perceived Load: {cognitive_weight}
+                User Input Task: "{user_dump}"
+                System Computed Quadrant: {allocation_quadrant}
+                System Directive: {system_directive}
+                Target Strategy Rule: {prompt_instruction}
                 
-                Return this JSON schema:
+                Return this exact JSON schema:
                 {{
-                  "fact_assessment": "One clinical, objective sentence summarizing the time/resource reality.",
-                  "cognitive_shift": "A directive to shift focus to the immediate window of capacity.",
-                  "momentum_task": "One single, hyper-specific micro-action to start within 15 minutes.",
-                  "clinical_rationale": "Why this task specifically bypasses executive dysfunction given the load."
+                  "fact_assessment": "A concise, 1-sentence statement clarifying the actual, objective scope of the task compared to available time.",
+                  "momentum_task": "A single, hyper-specific physical action step that aligns perfectly with the Target Strategy Rule.",
+                  "task_rationale": "A clear, grounded explanation of why this starting point matches their current capacity score of {cap_score}."
                 }}
                 """
                 
@@ -141,22 +144,22 @@ if st.button("Execute Framework Optimization", type="primary"):
                 data = json.loads(response.text)
                 st.write("---")
                 
-                # I. The Clinical Blueprint
-                st.markdown("#### ⚡ I. System Reframe")
+                # I. The Structural Resource Assessment
+                st.markdown("#### ⚡ I. Structural Resource Assessment")
                 st.markdown(f"""
                     <div class='reframe-card'>
-                        <p style='color: #94a3b8; font-size: 0.9rem; margin: 0;'><strong>ASSESSMENT:</strong> {data['fact_assessment']}</p>
-                        <p style='color: #f8fafc; font-size: 1rem; margin-top: 10px; margin-bottom: 0;'><strong>DIRECTIVE:</strong> {data['cognitive_shift']}</p>
+                        <p style='color: #94a3b8; font-size: 0.9rem; margin: 0;'><strong>CORE BLOCK:</strong> {system_directive}</p>
+                        <p style='color: #f8fafc; font-size: 1rem; margin-top: 10px; margin-bottom: 0;'><strong>SCOPE ANALYSIS:</strong> {data['fact_assessment']}</p>
                     </div>
                 """, unsafe_with_html=True)
                 
                 # II. The Target Action
-                st.markdown("#### 🚀 II. Initialization Vector")
+                st.markdown("#### 🚀 II. Core Initialization Action")
                 st.markdown(f"""
                     <div class='metric-card'>
-                        <span style='font-size: 0.75rem; color: #6366f1; font-weight: bold; text-transform: uppercase;'>Primary Momentum Task</span>
+                        <span style='font-size: 0.75rem; color: #6366f1; font-weight: bold; text-transform: uppercase;'>Calculated Next Micro-Step</span>
                         <h2 style='margin-top: 10px; margin-bottom: 15px;'>{data['momentum_task']}</h2>
-                        <p style='color: #94a3b8; font-size: 0.85rem; font-style: italic; margin: 0;'><strong>Rationale:</strong> {data['clinical_rationale']}</p>
+                        <p style='color: #94a3b8; font-size: 0.85rem; margin: 0;'><strong>Reasoning:</strong> {data['task_rationale']}</p>
                     </div>
                 """, unsafe_with_html=True)
                 
