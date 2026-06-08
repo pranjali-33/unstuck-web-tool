@@ -5,14 +5,14 @@ from google import genai
 from google.genai import types
 from google.genai.errors import APIError
 
-# 1. Page Configuration
+# 1. Structural Page Setup
 st.set_page_config(
     page_title="Unstuck Engine",
     page_icon="⚡",
     layout="centered"
 )
 
-# 2. Server Shield Connection (Using Cache to prevent 429 Errors)
+# 2. Caching Layer (Isolates client connection pings from page refreshes)
 @st.cache_resource
 def get_genai_client():
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -22,11 +22,11 @@ def get_genai_client():
 
 client = get_genai_client()
 
-# 3. Clean Main Header
+# 3. Clean Interface Header
 st.title("⚡ UNSTUCK")
 st.write("---")
 
-# 4. Step 1: Human Language Input Box
+# 4. Step 1: Input Matrix
 st.markdown("### **Step 1: What task is on your plate right now?**")
 user_dump = st.text_area(
     "Task Input Box",
@@ -37,7 +37,7 @@ user_dump = st.text_area(
 
 st.write(" ")
 
-# 5. Step 2: Realistic Resource Check
+# 5. Step 2: Reality Check Matrix
 st.markdown("### **Step 2: Reality Check**")
 col1, col2 = st.columns(2)
 
@@ -75,12 +75,11 @@ pre_likelihood = st.slider(
     label_visibility="collapsed"
 )
 
-# --- INTERNAL MODEL MECHANICS ---
+# --- INTERNAL MODEL CALCULATION ---
 cap_score = int(current_capacity[0])
 comp_score = int(task_complexity[0])
 strategy_delta = cap_score - comp_score
 
-# Setting up structural instructions based on backend matrix math
 if strategy_delta < 0:
     allocation_quadrant = "STRATEGIC DEEP WORK PARALYSIS"
     prompt_instruction = "The system flags a capacity deficit. Break this down into an absurdly simple micro-task executable in under 5 minutes."
@@ -91,8 +90,10 @@ else:
     allocation_quadrant = "BALANCED OPERATIONAL STATE"
     prompt_instruction = "Energy and complexity match perfectly. Provide a clean, logical first step to initiate focus."
 
-# 6. Action Optimization Button (No diagnostic box in the middle of the screen)
+# 6. Step 3: Sealed Action Container
 st.write(" ")
+
+# The execution button seals ALL conditional rendering blocks inside itself
 if st.button("Give Me My First Action Step", type="primary", use_container_width=True):
     if not client:
         st.error("Authentication Error: API Key missing in dashboard settings.")
@@ -131,7 +132,7 @@ if st.button("Give Me My First Action Step", type="primary", use_container_width
                 
                 data = json.loads(response.text)
                 
-                # Render Elegant Response Dashboard
+                # Render Response Output
                 st.write("---")
                 st.markdown("### **⚡ Your Action Roadmap**")
                 
@@ -157,7 +158,7 @@ if st.button("Give Me My First Action Step", type="primary", use_container_width
                     with out_col2:
                         st.write(data['task_rationale'])
             
-            # This intercepts server overloads ONLY when someone clicks the button and fails
+            # Error handling is now perfectly encapsulated. It can never run on page load.
             except APIError as api_err:
                 if "429" in str(api_err) or "RESOURCE_EXHAUSTED" in str(api_err):
                     st.write("---")
@@ -171,7 +172,5 @@ if st.button("Give Me My First Action Step", type="primary", use_container_width
             except Exception as e:
                 st.error(f"System Error: {str(e)}")
 
-# 7. Clean, Minimal Data Footer
+# Bottom design space left perfectly clean
 st.write(" ")
-st.write("---")
-st.caption("Alpha Pilot Tracker: ~84% conversion from freeze to active execution across 20 active testers.")
