@@ -1,172 +1,149 @@
 import streamlit as st
+import google.generativeai as genai
 import os
-import json
-from google import genai
-from google.genai import types
-from google.genai.errors import APIError
 
-# 1. Page Configuration
+# ==========================================
+# 1. PAGE CONFIGURATION & BRANDING
+# ==========================================
 st.set_page_config(
-    page_title="Unstuck Engine",
-    page_icon="⚡",
+    page_title="Unstuck | Behavioral Decision Support Matrix",
+    page_icon="🧠",
     layout="centered"
 )
 
-# 2. Server Shield Connection
-@st.cache_resource
-def get_genai_client():
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if api_key:
-        return genai.Client(api_key=api_key)
-    return None
+# App Title & Subtitle optimized for MBB positioning
+st.title("🧠 UNSTUCK")
+st.subheader("When motivation isn't the problem, but starting is.")
+st.markdown("---")
 
-client = get_genai_client()
+# ==========================================
+# 2. VISIBLE BEHAVIORAL FRAMEWORK SECTION
+# ==========================================
+# Addressing MBB feedback: making the underlying decision logic explicitly transparent
+with st.expander("🔬 View Underlying Behavioral Triage Engine", expanded=True):
+    st.markdown("""
+    **Unstuck** is an AI-operationalized behavioral framework designed to bypass executive dysfunction by neutralizing choice paralysis.
+    
+    ### The 4-Step Triage Process:
+    1. **Capacity Assessment:** Quantifies your current neurological and cognitive energy limits.
+    2. **Complexity Triage:** Deconstructs a high-friction mental thought-dump.
+    3. **Size Matching:** Translates the workload down to a size smaller than or equal to your current energy.
+    4. **Momentum Activation:** Recommends exactly **ONE** isolated micro-action to break inertia.
+    """)
 
-# 3. Interface Header
-st.title("⚡ UNSTUCK")
-st.write("---")
+st.markdown("---")
 
-# 4. Step 1: Input Box
-st.markdown("### **Step 1: What task is on your plate right now?**")
-user_dump = st.text_area(
-    "Task Input Box",
-    placeholder="What project, file, or decision are you trying to tackle? Jot down the details or your raw thoughts here...",
-    height=130,
-    label_visibility="collapsed"
+# ==========================================
+# 3. BACKEND SETUP & ERROR HANDLING
+# ==========================================
+# Secure API Key Retrieval from Streamlit Secrets
+api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+
+if not api_key:
+    st.error("⚠️ API Key Configuration Missing. Please add `GEMINI_API_KEY` to your Streamlit secrets.")
+    st.stop()
+
+# Initialize Gemini Client
+genai.configure(api_key=api_key)
+
+# Initialize Session State to prevent text from disappearing on UI reruns
+if "triage_result" not in st.session_state:
+    st.session_state.triage_result = None
+
+# ==========================================
+# 4. USER INPUT LAYER (The Metrics Matrix)
+# ==========================================
+st.markdown("### 📥 Step 1: Input Your Current Cognitive Matrix")
+
+brain_dump = st.text_area(
+    "Mental Thought Dump / Messy Notes",
+    placeholder="Type everything stressing you out right now. Don't organize it—let the tool handle the triage.",
+    height=150
 )
 
-st.write(" ")
-
-# 5. Step 2: Reality Check Matrix
-st.markdown("### **Step 2: Reality Check**")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("**Your mental battery right now:**")
-    current_capacity = st.selectbox(
-        "Energy Selection",
-        options=[
-            "1 - Running on fumes (Tired / Exhausted)",
-            "2 - Normal capacity (Standard operational focus)",
-            "3 - Highly focused (Ready to work but directionless)"
-        ],
-        label_visibility="collapsed"
-    )
-
+    energy_level = st.slider("Current Cognitive Energy Level", 1, 10, 5, 
+                             help="1 = Brain fog/exhausted, 10 = Sharp/focused")
 with col2:
-    st.markdown("**Perceived task weight:**")
-    task_complexity = st.selectbox(
-        "Complexity Selection",
-        options=[
-            "1 - Lightweight (Straightforward / Routine steps)",
-            "2 - Medium heavy (Messy scope / Needs thinking)",
-            "3 - Intimidating (Vague / High stakes project)"
-        ],
-        label_visibility="collapsed"
-    )
+    task_complexity = st.slider("Perceived Task Complexity", 1, 10, 5, 
+                                help="1 = Administrative/Simple, 10 = Highly ambiguous/Strategic")
 
-st.write(" ")
-st.markdown("**Honesty check: What are the odds you actually start this in the next 15 minutes?**")
-pre_likelihood = st.slider(
-    "Probability Slider",
-    min_value=1,
-    max_value=10,
-    value=5,
-    label_visibility="collapsed"
-)
+action_readiness = st.slider("Action Readiness Score", 1, 10, 5, 
+                             help="How willing are you to take a tiny step right this second?")
 
-# =====================================================================
-# 🧠 THE STRATEGIC INTERVIEW EMPOWERMENT LAYER (70% HARDCODED FRAMEWORK)
-# =====================================================================
-cap_score = int(current_capacity[0])
-comp_score = int(task_complexity[0])
-
-# Explicit Matrix Rules engineered by YOU. No LLM black box logic here.
-if cap_score == 1 and comp_score == 3:
-    chosen_strategy = "MICRO-TASK DECOMPOSITION"
-    framework_directive = "Break the task down into a tiny, absurdly simple micro-action that takes under 5 minutes to beat procrastination."
-elif cap_score == 3 and comp_score == 1:
-    chosen_strategy = "HIGH-VELOCITY MOMENTUM SPRINT"
-    framework_directive = "Leverage peak energy to run a rapid 10-minute sprint and completely clear this off the plate."
-elif cap_score >= comp_score:
-    chosen_strategy = "IMMEDIATE PROGRESSIVE INITIALIZATION"
-    framework_directive = "Isolate the absolute first structural step or row of data and execute it immediately."
-else:
-    chosen_strategy = "SCOPE RE-ANCHORING"
-    framework_directive = "Energy is low relative to complexity. Reduce the operational scope by half and outline just one milestone."
-
-# 6. Action Optimization Button
-st.write(" ")
-if st.button("Give Me My First Action Step", type="primary", use_container_width=True):
-    if not client:
-        st.error("Authentication Error: API Key missing in dashboard settings.")
-    elif not user_dump.strip():
-        st.warning("Please enter your task details in Step 1 first.")
+# ==========================================
+# 5. EXECUTION LAYER & SYSTEM PROMPTING
+# ==========================================
+if st.button("Generate One Next Move", type="primary"):
+    if not brain_dump.strip():
+        st.warning("Please provide a brain dump before running the behavioral triage engine.")
     else:
-        with st.spinner("Operationalizing framework matrix..."):
-            try:
-                # The LLM is strictly used as a 30% linguistic translator
-                system_instruction = (
-                    "You are a behavioral linguistics optimizer. Your single job is to translate raw user tasks into natural, actionable phrases based on strict structural rules. "
-                    "Output strictly raw JSON matching the schema requested. No filler conversational prose."
-                )
-                
-                prompt_content = f"""
-                Raw User Input: "{user_dump}"
-                
-                Our hardcoded behavioral framework has already evaluated the user's capacity metrics and determined the following:
-                - Selected Strategy Group: {chosen_strategy}
-                - Execution Rule: {framework_directive}
-                
-                Generate a response that maps the Raw User Input directly onto our Execution Rule.
-                
-                Return this exact JSON schema:
-                {{
-                  "fact_assessment": "A clear 1-sentence statement contextualizing their input against their current energy state.",
-                  "momentum_task": "A single, hyper-specific physical action step that executing the template directive exactly.",
-                  "task_rationale": "An explainable behavioral science reason why this specific action fits a strategy of {chosen_strategy}."
-                }}
-                """
-                
-                response = client.models.generate_content(
-                    model='gemini-2.0-flash',
-                    contents=prompt_content,
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        response_mime_type="application/json",
-                        temperature=0.1
-                    ),
-                )
-                
-                data = json.loads(response.text)
-                
-                # Render Response Dashboard
-                st.write("---")
-                st.markdown(f"### **⚡ Framework Assessment: {chosen_strategy}**")
-                
-                with st.container(border=True):
-                    out_col1, out_col2 = st.columns([1, 2])
-                    
-                    with out_col1:
-                        st.markdown("**THE REALITY CHECK**")
-                    with out_col2:
-                        st.write(data['fact_assessment'])
-                        
-                    st.write("---")
-                    
-                    with out_col1:
-                        st.markdown("**THE 15-MIN ACTION**")
-                    with out_col2:
-                        st.info(f"**{data['momentum_task']}**")
-                        
-                    st.write("---")
-                    
-                    with out_col1:
-                        st.markdown("**METHODOLOGY WHY**")
-                    with out_col2:
-                        st.write(data['task_rationale'])
+        with st.spinner("Operationalizing framework... Triaging mental clutter..."):
             
-            except APIError as api_err:
-                st.error("The network is exceptionally busy right now. Please click the button once more.")
+            # Structuring a hyper-strict system prompt that forces the LLM to follow your exact framework
+            framework_prompt = f"""
+            You are an expert executive functioning coach and a behavioral design engine. 
+            Your role is to operationalize the UNSTUCK Behavioral Triage Matrix.
+            
+            INPUT CONSTRAINTS:
+            - User's Messy Thought Dump: "{brain_dump}"
+            - Current Cognitive Energy: {energy_level}/10
+            - Perceived Task Complexity: {task_complexity}/10
+            - Action Readiness Score: {action_readiness}/10
+            
+            Based on these inputs, you must adjust the "activation energy" required for their next step. If energy is low or complexity is high, the action step MUST be drastically downsized to an atomic micro-task (e.g., less than 5 minutes of effort).
+            
+            OUTPUT FORMAT REQUIREMENTS:
+            Provide your output strictly in the following Markdown format. Do not deviate.
+            
+            ### 🩺 Diagnosis
+            [Provide a 2-sentence psychological diagnosis of why the user is experiencing friction based on their metrics.]
+            
+            ### 🔄 Reframe
+            [Offer a powerful cognitive reframe to lower anxiety regarding the thought dump.]
+            
+            ### 🎯 The ONE Next Action
+            **[State exactly ONE concrete, highly specific, friction-free micro-action the user can take in the next 15 minutes. It must be an isolated step, not a sequence.]**
+            
+            ### 📋 Rationale
+            [Explain how this step explicitly maps to their current Cognitive Energy level of {energy_level}/10.]
+            """
+            
+            try:
+                # Utilizing the recommended model for text-generation
+                model = genai.GenerativeModel('gemini-pro')
+                response = model.generate_content(framework_prompt)
+                
+                # Cache response in session state to protect against app re-renders
+                st.session_state.triage_result = response.text
+                
             except Exception as e:
-                st.error("System structural optimization processing. Please retry.")
+                # Consulting approach to technical quota roadblocks: Clear, controlled user messaging
+                st.error("### ⏳ Framework Traffic Control")
+                st.info(
+                    "The behavioral triage engine is currently processing a high volume of requests. "
+                    "To preserve the analytical integrity of the framework, requests are being throttled. "
+                    "Please wait 60 seconds and try your request again."
+                )
+                # Log the actual technical issue gracefully below for debugging purposes
+                with st.expander("Technical Exception Data Logs"):
+                    st.code(str(e))
+
+# ==========================================
+# 6. OUTPUT & IMPACT SCREEN
+# ==========================================
+if st.session_state.triage_result:
+    st.markdown("---")
+    st.markdown("### 📤 Step 2: Your Action Recommendation Matrix")
+    st.markdown(st.session_state.triage_result)
+    
+    # Pilot Study Data Collection Prompt — MBB Gold Standard Evidence Gathering
+    st.markdown("---")
+    st.markdown("### 📊 Help Validate the Framework")
+    st.info(
+        "As part of our 7-day Operational Pilot Study tracking execution velocity under high-cognitive loads, "
+        "please take 30 seconds to submit your quick, anonymous impact metrics via our tracking protocol."
+    )
+    st.link_button("Complete Pilot Impact Form", "https://forms.google.com/YOUR_FORM_URL_HERE")
