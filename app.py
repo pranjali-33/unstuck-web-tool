@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import json
-import time
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
@@ -23,7 +22,7 @@ def get_genai_client():
 
 client = get_genai_client()
 
-# 3. Clean Main Header
+# 3. Interface Header
 st.title("⚡ UNSTUCK")
 st.write("---")
 
@@ -38,7 +37,7 @@ user_dump = st.text_area(
 
 st.write(" ")
 
-# 5. Step 2: Realistic Resource Check
+# 5. Step 2: Reality Check Matrix
 st.markdown("### **Step 2: Reality Check**")
 col1, col2 = st.columns(2)
 
@@ -76,20 +75,25 @@ pre_likelihood = st.slider(
     label_visibility="collapsed"
 )
 
-# --- INTERNAL MODEL MECHANICS ---
+# =====================================================================
+# 🧠 THE STRATEGIC INTERVIEW EMPOWERMENT LAYER (70% HARDCODED FRAMEWORK)
+# =====================================================================
 cap_score = int(current_capacity[0])
 comp_score = int(task_complexity[0])
-strategy_delta = cap_score - comp_score
 
-if strategy_delta < 0:
-    allocation_quadrant = "STRATEGIC DEEP WORK PARALYSIS"
-    prompt_instruction = "The system flags a capacity deficit. Break this down into an absurdly simple micro-task executable in under 5 minutes."
-elif strategy_delta > 0:
-    allocation_quadrant = "QUICK WINS / EXCESS CAPACITY"
-    prompt_instruction = "The user has high energy relative to the task. Give them an immediate, high-momentum starting action."
+# Explicit Matrix Rules engineered by YOU. No LLM black box logic here.
+if cap_score == 1 and comp_score == 3:
+    chosen_strategy = "MICRO-TASK DECOMPOSITION"
+    framework_directive = "Break the task down into a tiny, absurdly simple micro-action that takes under 5 minutes to beat procrastination."
+elif cap_score == 3 and comp_score == 1:
+    chosen_strategy = "HIGH-VELOCITY MOMENTUM SPRINT"
+    framework_directive = "Leverage peak energy to run a rapid 10-minute sprint and completely clear this off the plate."
+elif cap_score >= comp_score:
+    chosen_strategy = "IMMEDIATE PROGRESSIVE INITIALIZATION"
+    framework_directive = "Isolate the absolute first structural step or row of data and execute it immediately."
 else:
-    allocation_quadrant = "BALANCED OPERATIONAL STATE"
-    prompt_instruction = "Energy and complexity match perfectly. Provide a clean, logical first step to initiate focus."
+    chosen_strategy = "SCOPE RE-ANCHORING"
+    framework_directive = "Energy is low relative to complexity. Reduce the operational scope by half and outline just one milestone."
 
 # 6. Action Optimization Button
 st.write(" ")
@@ -97,85 +101,72 @@ if st.button("Give Me My First Action Step", type="primary", use_container_width
     if not client:
         st.error("Authentication Error: API Key missing in dashboard settings.")
     elif not user_dump.strip():
-        st.warning("Please enter your task details in Step 1 first so we can map out your entry point.")
+        st.warning("Please enter your task details in Step 1 first.")
     else:
-        with st.spinner("Connecting to framework engine..."):
-            
-            system_instruction = (
-                "You are an operational language parser. Your single job is to translate messy human prose into clear execution steps. "
-                "Output strictly raw JSON matching the schema requested. No conversational filler."
-            )
-            
-            prompt_content = f"""
-            User Input Task: "{user_dump}"
-            System Computed Quadrant: {allocation_quadrant}
-            Target Strategy Rule: {prompt_instruction}
-            
-            Return this exact JSON schema:
-            {{
-              "fact_assessment": "A concise, 1-sentence statement clarifying the actual, objective scope of the task compared to available time.",
-              "momentum_task": "A single, hyper-specific physical action step that aligns perfectly with the Target Strategy Rule.",
-              "task_rationale": "A clear, grounded explanation of why this starting point matches their current capacity score of {cap_score}."
-            }}
-            """
-            
-            response_text = None
-            max_retries = 3
-            delay = 2  # Start with a 2-second pause if server is busy
-            
-            # Smart Retry Loop
-            for attempt in range(max_retries):
-                try:
-                    response = client.models.generate_content(
-                        model='gemini-2.0-flash',
-                        contents=prompt_content,
-                        config=types.GenerateContentConfig(
-                            system_instruction=system_instruction,
-                            response_mime_type="application/json",
-                            temperature=0.1
-                        ),
-                    )
-                    response_text = response.text
-                    break  # Success! Break out of the loop.
-                except APIError as api_err:
-                    if ("429" in str(api_err) or "RESOURCE_EXHAUSTED" in str(api_err)) and attempt < max_retries - 1:
-                        time.sleep(delay)
-                        delay *= 2  # Wait longer on the next try (2s, then 4s)
-                    else:
-                        st.error("The network is exceptionally busy right now. Please try clicking once more.")
-                        st.stop()
-                except Exception as e:
-                    st.error(f"Connection Error: {str(e)}")
-                    st.stop()
-            
-            if response_text:
-                try:
-                    data = json.loads(response_text)
+        with st.spinner("Operationalizing framework matrix..."):
+            try:
+                # The LLM is strictly used as a 30% linguistic translator
+                system_instruction = (
+                    "You are a behavioral linguistics optimizer. Your single job is to translate raw user tasks into natural, actionable phrases based on strict structural rules. "
+                    "Output strictly raw JSON matching the schema requested. No filler conversational prose."
+                )
+                
+                prompt_content = f"""
+                Raw User Input: "{user_dump}"
+                
+                Our hardcoded behavioral framework has already evaluated the user's capacity metrics and determined the following:
+                - Selected Strategy Group: {chosen_strategy}
+                - Execution Rule: {framework_directive}
+                
+                Generate a response that maps the Raw User Input directly onto our Execution Rule.
+                
+                Return this exact JSON schema:
+                {{
+                  "fact_assessment": "A clear 1-sentence statement contextualizing their input against their current energy state.",
+                  "momentum_task": "A single, hyper-specific physical action step that executing the template directive exactly.",
+                  "task_rationale": "An explainable behavioral science reason why this specific action fits a strategy of {chosen_strategy}."
+                }}
+                """
+                
+                response = client.models.generate_content(
+                    model='gemini-2.0-flash',
+                    contents=prompt_content,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        response_mime_type="application/json",
+                        temperature=0.1
+                    ),
+                )
+                
+                data = json.loads(response.text)
+                
+                # Render Response Dashboard
+                st.write("---")
+                st.markdown(f"### **⚡ Framework Assessment: {chosen_strategy}**")
+                
+                with st.container(border=True):
+                    out_col1, out_col2 = st.columns([1, 2])
                     
-                    # Render Response Dashboard
+                    with out_col1:
+                        st.markdown("**THE REALITY CHECK**")
+                    with out_col2:
+                        st.write(data['fact_assessment'])
+                        
                     st.write("---")
-                    st.markdown("### **⚡ Your Action Roadmap**")
                     
-                    with st.container(border=True):
-                        out_col1, out_col2 = st.columns([1, 2])
+                    with out_col1:
+                        st.markdown("**THE 15-MIN ACTION**")
+                    with out_col2:
+                        st.info(f"**{data['momentum_task']}**")
                         
-                        with out_col1:
-                            st.markdown("**THE REALITY CHECK**")
-                        with out_col2:
-                            st.write(data['fact_assessment'])
-                            
-                        st.write("---")
-                        
-                        with out_col1:
-                            st.markdown("**THE 15-MIN ACTION**")
-                        with out_col2:
-                            st.info(f"**{data['momentum_task']}**")
-                            
-                        st.write("---")
-                        
-                        with out_col1:
-                            st.markdown("**METHODOLOGY WHY**")
-                        with out_col2:
-                            st.write(data['task_rationale'])
-                except Exception as parse_err:
-                    st.error("Engine formatting anomaly. Please resubmit.")
+                    st.write("---")
+                    
+                    with out_col1:
+                        st.markdown("**METHODOLOGY WHY**")
+                    with out_col2:
+                        st.write(data['task_rationale'])
+            
+            except APIError as api_err:
+                st.error("The network is exceptionally busy right now. Please click the button once more.")
+            except Exception as e:
+                st.error("System structural optimization processing. Please retry.")
