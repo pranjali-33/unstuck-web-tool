@@ -5,14 +5,14 @@ from google import genai
 from google.genai import types
 from google.genai.errors import APIError
 
-# 1. Structural Page Setup
+# 1. Page Configuration
 st.set_page_config(
     page_title="Unstuck Engine",
     page_icon="⚡",
     layout="centered"
 )
 
-# 2. Caching Layer (Isolates client connection pings from page refreshes)
+# 2. Server Shield Connection (Using Cache to prevent 429 Errors)
 @st.cache_resource
 def get_genai_client():
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -22,11 +22,11 @@ def get_genai_client():
 
 client = get_genai_client()
 
-# 3. Clean Interface Header
+# 3. Clean Main Header
 st.title("⚡ UNSTUCK")
 st.write("---")
 
-# 4. Step 1: Input Matrix
+# 4. Step 1: Input Box
 st.markdown("### **Step 1: What task is on your plate right now?**")
 user_dump = st.text_area(
     "Task Input Box",
@@ -37,7 +37,7 @@ user_dump = st.text_area(
 
 st.write(" ")
 
-# 5. Step 2: Reality Check Matrix
+# 5. Step 2: Realistic Resource Check
 st.markdown("### **Step 2: Reality Check**")
 col1, col2 = st.columns(2)
 
@@ -75,7 +75,7 @@ pre_likelihood = st.slider(
     label_visibility="collapsed"
 )
 
-# --- INTERNAL MODEL CALCULATION ---
+# --- INTERNAL MODEL MECHANICS ---
 cap_score = int(current_capacity[0])
 comp_score = int(task_complexity[0])
 strategy_delta = cap_score - comp_score
@@ -90,10 +90,8 @@ else:
     allocation_quadrant = "BALANCED OPERATIONAL STATE"
     prompt_instruction = "Energy and complexity match perfectly. Provide a clean, logical first step to initiate focus."
 
-# 6. Step 3: Sealed Action Container
+# 6. Action Optimization Button
 st.write(" ")
-
-# The execution button seals ALL conditional rendering blocks inside itself
 if st.button("Give Me My First Action Step", type="primary", use_container_width=True):
     if not client:
         st.error("Authentication Error: API Key missing in dashboard settings.")
@@ -132,7 +130,7 @@ if st.button("Give Me My First Action Step", type="primary", use_container_width
                 
                 data = json.loads(response.text)
                 
-                # Render Response Output
+                # Render Response Dashboard
                 st.write("---")
                 st.markdown("### **⚡ Your Action Roadmap**")
                 
@@ -158,7 +156,6 @@ if st.button("Give Me My First Action Step", type="primary", use_container_width
                     with out_col2:
                         st.write(data['task_rationale'])
             
-            # Error handling is now perfectly encapsulated. It can never run on page load.
             except APIError as api_err:
                 if "429" in str(api_err) or "RESOURCE_EXHAUSTED" in str(api_err):
                     st.write("---")
@@ -171,6 +168,3 @@ if st.button("Give Me My First Action Step", type="primary", use_container_width
                     st.error(f"API Connection Error: {str(api_err)}")
             except Exception as e:
                 st.error(f"System Error: {str(e)}")
-
-# Bottom design space left perfectly clean
-st.write(" ")
