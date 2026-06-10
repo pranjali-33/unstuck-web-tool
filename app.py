@@ -1,6 +1,5 @@
 import streamlit as st
-import urllib.request
-import json
+from openai import OpenAI
 import os
 
 # ==========================================
@@ -34,14 +33,17 @@ with st.expander("🔬 View Underlying Behavioral Triage Engine", expanded=True)
 st.markdown("---")
 
 # ==========================================
-# 3. BACKEND SETUP (Zero-Dependency API Call)
+# 3. BACKEND SETUP & SDK INITIALIZATION
 # ==========================================
-# Secure API Key Retrieval from Streamlit Secrets
-api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+# Secure API Key Retrieval from Streamlit Secrets or Environment Variables
+api_key = st.secrets.get("OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY")
 
 if not api_key:
-    st.error("⚠️ API Key Configuration Missing. Please add `GEMINI_API_KEY` to your Streamlit secrets.")
+    st.error("⚠️ API Key Configuration Missing. Please add `OPENAI_API_KEY` to your Streamlit secrets.")
     st.stop()
+
+# Initialize the official OpenAI Client
+client = OpenAI(api_key=api_key)
 
 # Initialize Session State to lock results on screen
 if "triage_result" not in st.session_state:
@@ -76,7 +78,7 @@ with col2:
 action_readiness = st.slider("Honesty check: What are the odds you actually start this in the next 15 minutes? (1-10)", 1, 10, 5)
 
 # ==========================================
-# 5. EXECUTION LAYER & NATIVE API CALL
+# 5. EXECUTION LAYER & OPENAI INTERFACE
 # ==========================================
 if st.button("Give Me My First Action Step", type="primary"):
     if not brain_dump.strip():
@@ -110,39 +112,33 @@ if st.button("Give Me My First Action Step", type="primary"):
             [Explain how this step explicitly maps to their current energy level.]
             """
             
-            # Formatting the raw network request for Gemini (No libraries needed)
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-            headers = {"Content-Type": "application/json"}
-            data = {"contents": [{"parts": [{"text": framework_prompt}]}]}
-            
             try:
-                req = urllib.request.Request(url, data=json.dumps(data).encode("utf-8"), headers=headers)
-                with urllib.request.urlopen(req, timeout=15) as response:
-                    res_data = json.loads(response.read().decode("utf-8"))
-                    # Extract text safely from the network response
-                    output_text = res_data["candidates"][0]["content"]["parts"][0]["text"]
-                    st.session_state.triage_result = output_text
-                    
+                # Production API Call using high-efficiency gpt-4o-mini
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a specialized behavioral design engine that outputs clean, structured markdown based precisely on the framework requirements requested."},
+                        {"role": "user", "content": framework_prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=600
+                )
+                
+                # Direct extraction via SDK object structure
+                output_text = response.choices[0].message.content
+                st.session_state.triage_result = output_text
+                
             except Exception as e:
                 st.error("### ⏳ Framework Traffic Control")
                 st.info(
-                    "The behavioral triage engine is currently experiencing a high volume of network requests. "
-                    "Please click the button once more to re-verify the request connection."
+                    "The behavioral triage engine encountered a processing interruption. "
+                    "Please confirm your API balance status or click the execution button once more."
                 )
 
 # ==========================================
-# 6. OUTPUT & IMPACT SCREEN
+# 6. OUTPUT SCREEN
 # ==========================================
 if st.session_state.triage_result:
     st.markdown("---")
-    st.markdown("### 📤 Step 3: Your Action Recommendation Matrix")
+    st.markdown("### 📤 Step 2: Your Action Recommendation Matrix")
     st.markdown(st.session_state.triage_result)
-    
-    # Pilot Study Tracking Protocol
-    st.markdown("---")
-    st.markdown("### 📊 Help Validate the Framework")
-    st.info(
-        "As part of our 7-day Operational Pilot Study tracking execution velocity under high-cognitive loads, "
-        "please take 30 seconds to submit your quick, anonymous impact metrics via our tracking protocol."
-    )
-    st.link_button("Complete Pilot Impact Form", "https://forms.google.com/")
