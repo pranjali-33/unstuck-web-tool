@@ -8,9 +8,9 @@
   @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   :root{--ink:#1f2735;--muted:#6d7689;--o1:#8fd0ff;--o2:#c7b4ff;--o3:#ffc2e2;--frag:rgba(120,140,210,.7);}
-  html,body{height:100%;}
-  body{font-family:'Inter',sans-serif;color:var(--ink);display:flex;justify-content:center;overflow-x:hidden;background:#dfeaf4;}
-  .device{width:100%;max-width:440px;min-height:100vh;position:relative;overflow:hidden;
+  html,body{min-height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--ink);display:flex;justify-content:center;overflow-x:hidden;overflow-y:auto;background:#dfeaf4;min-height:100vh;}
+  .device{width:100%;max-width:440px;min-height:100vh;position:relative;overflow:visible;
     background:linear-gradient(165deg,#cfe7fb 0%,#e3e6fb 40%,#f3e4f3 70%,#e8f3ff 100%);}
   .bloom{position:fixed;top:60px;left:50%;transform:translateX(-50%);width:300px;height:160px;z-index:0;
     background:radial-gradient(ellipse,rgba(255,255,255,.85),transparent 70%);filter:blur(20px);opacity:.7;}
@@ -166,105 +166,4 @@
             <div class="rate-opts" id="rateOpts">
               <button data-v="much">Much clearer</button>
               <button data-v="bit">A bit</button>
-              <button data-v="not">Not really</button>
-            </div>
-            <div class="rate-thanks" id="rateThanks">Thank you, that helps the pilot.</div>
-          </div>
-        </div>
-        <button class="again" id="again">clear this and start fresh</button>
-      </div>
-    </div>
-  </div>
-<script>
-  const pal={Fried:['#8fd6ff','#7ab8e8','#a0c4f0'],Drained:['#a4c4f0','#c6a4f0','#d8b8f0'],
-    Charging:['#8fd0ff','#c7b4ff','#ffc2e2'],Charged:['#ffe08c','#ffb86e','#ff9ec4']};
-  const glowCol={Fried:'#7ab8e8',Drained:'#b094e0',Charging:'#c7b4ff',Charged:'#ffc28c'};
-  const depthLabel={Fried:'Minimal',Drained:'Light',Charging:'Full',Charged:'Full+'};
-  const root=document.documentElement;
-  let energy='Charging';
-  document.querySelectorAll('.state').forEach(s=>{
-    s.addEventListener('click',()=>{
-      document.querySelectorAll('.state').forEach(x=>x.classList.remove('on'));
-      s.classList.add('on');
-      energy=s.dataset.name;
-      document.getElementById('enval').textContent=depthLabel[energy];
-      const p=pal[energy];
-      root.style.setProperty('--o1',p[0]);root.style.setProperty('--o2',p[1]);root.style.setProperty('--o3',p[2]);
-      document.getElementById('glow').style.background='radial-gradient(circle,'+glowCol[energy]+',transparent 70%)';
-    });
-  });
-  const go=document.getElementById('go');
-  const thinking=document.getElementById('thinking');
-  const result=document.getElementById('result');
-  const inputZone=document.getElementById('inputZone');
-  const orb=document.getElementById('orb');
-  const hint=document.getElementById('hint');
-  const thinkingLines=['Reading through the noise','Sorting what matters','Pulling out the shape'];
-  go.addEventListener('click',async()=>{
-    const dump=document.getElementById('dump').value.trim();
-    if(dump.length<3){hint.textContent='Give me a little more to work with.';hint.classList.add('show');document.getElementById('dump').focus();return;}
-    hint.classList.remove('show');
-    inputZone.style.display='none';
-    result.classList.remove('show');result.style.display='none';
-    thinking.classList.add('show');
-    orb.classList.add('thinking-mode');
-    let i=0;const tt=document.getElementById('thinkingText');
-    const cycle=setInterval(()=>{i=(i+1)%thinkingLines.length;tt.textContent=thinkingLines[i];},1400);
-    try{
-      const res=await fetch('/api/unstuck',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dump,energy})});
-      if(!res.ok)throw new Error('bad');
-      const data=await res.json();
-      clearInterval(cycle);
-      showResult(data);
-    }catch(e){
-      clearInterval(cycle);
-      showResult({
-        the_real_ask:"They need the Q3 figures sent to the finance team before Thursday's noon review.",
-        core_pieces:["Deadline is Thursday 12pm, not end of day","Send to finance team, cc the manager","Use the updated template from last week"],
-        so_what: energy==='Charged' ? "Everything else in the email is context. Reply now confirming Thursday, and block 30 minutes Wednesday to pull the figures." : "Everything else in the email is background. The only action is the Thursday figures."
-      });
-    }
-  });
-  function showResult(data){
-    thinking.classList.remove('show');
-    orb.classList.remove('thinking-mode');
-    document.getElementById('askText').textContent=data.the_real_ask||'';
-    const piecesBlock=document.getElementById('piecesBlock');
-    const piecesList=document.getElementById('piecesList');
-    piecesList.innerHTML='';
-    if(data.core_pieces&&data.core_pieces.length){
-      piecesBlock.style.display='block';
-      data.core_pieces.forEach(p=>{const li=document.createElement('li');li.textContent=p;piecesList.appendChild(li);});
-    }else{piecesBlock.style.display='none';}
-    const sowhatBlock=document.getElementById('sowhatBlock');
-    if(data.so_what&&data.so_what.trim()){sowhatBlock.style.display='block';document.getElementById('sowhatText').textContent=data.so_what;}
-    else{sowhatBlock.style.display='none';}
-    document.querySelectorAll('#rateOpts button').forEach(b=>b.classList.remove('picked'));
-    document.getElementById('rateOpts').style.display='flex';
-    document.getElementById('rateQ').style.display='block';
-    document.getElementById('rateThanks').style.display='none';
-    result.style.display='block';result.classList.add('show');
-    setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'start'}),100);
-  }
-  document.querySelectorAll('#rateOpts button').forEach(b=>{
-    b.addEventListener('click',()=>{
-      document.querySelectorAll('#rateOpts button').forEach(x=>x.classList.remove('picked'));
-      b.classList.add('picked');
-      console.log('clarity_rating',{rating:b.dataset.v,energy:energy,t:Date.now()});
-      setTimeout(()=>{
-        document.getElementById('rateOpts').style.display='none';
-        document.getElementById('rateQ').style.display='none';
-        document.getElementById('rateThanks').style.display='block';
-      },350);
-    });
-  });
-  document.getElementById('again').addEventListener('click',()=>{
-    document.getElementById('dump').value='';
-    result.classList.remove('show');result.style.display='none';
-    inputZone.style.display='block';
-    document.getElementById('dump').focus();
-    window.scrollTo({top:0,behavior:'smooth'});
-  });
-</script>
-</body>
-</html>
+              <button data-v="not">Not
