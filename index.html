@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unstuck — turn the mess into one clear read</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  :root{--ink:#1f2735;--muted:#6d7689;--o1:#8fd0ff;--o2:#c7b4ff;--o3:#ffc2e2;--frag:rgba(120,140,210,.7);}
+  html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;color:var(--ink);display:flex;justify-content:center;overflow-x:hidden;background:#dfeaf4;}
+  .device{width:100%;max-width:440px;min-height:100vh;position:relative;overflow:hidden;
+    background:linear-gradient(165deg,#cfe7fb 0%,#e3e6fb 40%,#f3e4f3 70%,#e8f3ff 100%);}
+  .bloom{position:fixed;top:60px;left:50%;transform:translateX(-50%);width:300px;height:160px;z-index:0;
+    background:radial-gradient(ellipse,rgba(255,255,255,.85),transparent 70%);filter:blur(20px);opacity:.7;}
+  .swirls{position:fixed;inset:0;z-index:0;max-width:440px;margin:0 auto;overflow:hidden;}
+  .swirl{position:absolute;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);opacity:.4;}
+  .sw1{width:520px;height:520px;top:-180px;left:-160px;border-color:rgba(180,210,255,.4);transform:rotate(20deg);}
+  .sw2{width:440px;height:440px;top:-120px;right:-200px;border-color:rgba(220,200,255,.35);}
+  .ambient{position:fixed;inset:0;z-index:0;max-width:440px;margin:0 auto;filter:blur(55px);opacity:.5;}
+  .a-a{position:absolute;width:300px;height:300px;border-radius:50%;top:-30px;left:-50px;background:#a8d8ff;}
+  .a-b{position:absolute;width:280px;height:280px;border-radius:50%;top:70px;right:-60px;background:#e2c2ff;}
+  .a-c{position:absolute;width:260px;height:260px;border-radius:50%;bottom:-40px;left:30px;background:#ffd0ea;}
+  .content{position:relative;z-index:2;padding:54px 30px 60px;display:flex;flex-direction:column;align-items:center;}
+  .reveal{opacity:0;transform:translateY(14px);animation:rise 1s cubic-bezier(.2,.7,.2,1) forwards;}
+  .d1{animation-delay:.1s}.d2{animation-delay:.7s}.d3{animation-delay:1.7s}.d4{animation-delay:1.9s}.d5{animation-delay:2.1s}.d6{animation-delay:2.3s}
+  @keyframes rise{to{opacity:1;transform:translateY(0);}}
+  .masthead{width:100%;display:flex;align-items:center;justify-content:space-between;}
+  .wordmark{font-family:'Newsreader',serif;font-weight:500;font-size:21px;letter-spacing:.01em;
+    background:linear-gradient(170deg,#aebfe0 0%,#5d6f9e 30%,#2a3550 52%,#7e93c0 70%,#c9d6f0 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(255,255,255,.6));}
+  .issue{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+  .stage{margin:48px 0 8px;position:relative;width:250px;height:250px;display:flex;align-items:center;justify-content:center;}
+  .glow{position:absolute;width:200px;height:200px;border-radius:50%;filter:blur(44px);opacity:.6;
+    background:radial-gradient(circle,var(--o2),transparent 70%);transition:background 1.4s ease;}
+  .orb{width:150px;height:150px;border-radius:50%;position:relative;overflow:hidden;z-index:2;
+    background:radial-gradient(circle at 34% 26%,#fff 0%,rgba(255,255,255,0) 24%),radial-gradient(circle at 50% 50%,var(--o1),var(--o2) 50%,var(--o3));
+    animation:breathe 6.5s ease-in-out infinite;
+    box-shadow:inset 0 -14px 30px rgba(120,140,200,.3),inset 0 12px 26px rgba(255,255,255,.8),0 22px 50px rgba(140,160,220,.4);
+    transition:background 1.4s ease;}
+  .orb.thinking-mode{animation:breathe 1.8s ease-in-out infinite;}
+  .orb .gloss{position:absolute;top:5%;left:13%;width:74%;height:44%;border-radius:50%;background:linear-gradient(to bottom,rgba(255,255,255,.95),rgba(255,255,255,0));filter:blur(2px);}
+  .orb .refract{position:absolute;bottom:7%;left:22%;width:56%;height:26%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,255,255,0));filter:blur(3px);}
+  .orb-rim{position:absolute;width:150px;height:150px;border-radius:50%;pointer-events:none;z-index:3;
+    box-shadow:inset 0 2px 4px rgba(255,255,255,.95),inset 0 -3px 6px rgba(120,140,200,.4),inset 0 0 0 1.5px rgba(255,255,255,.7);}
+  .frag{position:absolute;border-radius:50%;background:var(--frag);top:50%;left:50%;margin:-3px;box-shadow:0 2px 6px rgba(120,140,210,.4);transition:background 1.4s ease;}
+  @keyframes orbit{to{transform:rotate(360deg) translateX(108px) rotate(-360deg);}}
+  .f1{width:7px;height:7px;animation:orbit 8s linear infinite;}.f2{width:5px;height:5px;animation:orbit 11s linear infinite reverse;}
+  .f3{width:6px;height:6px;animation:orbit 9.5s linear infinite;}.f4{width:4px;height:4px;animation:orbit 13s linear infinite reverse;}
+  .f5{width:5px;height:5px;animation:orbit 10s linear infinite;}
+  @keyframes breathe{0%,100%{transform:scale(.96);}50%{transform:scale(1.04);}}
+  h1{font-family:'Newsreader',serif;font-weight:400;font-size:42px;line-height:1.04;letter-spacing:-.01em;text-align:center;margin-top:20px;}
+  h1 em{font-style:italic;}
+  .lede{font-size:15px;color:var(--muted);line-height:1.6;max-width:31ch;text-align:center;margin-top:16px;}
+  .card{width:100%;margin-top:34px;background:linear-gradient(170deg,rgba(255,255,255,.7),rgba(255,255,255,.45));backdrop-filter:blur(26px);
+    border:1px solid rgba(255,255,255,.95);border-radius:24px;padding:20px;
+    box-shadow:0 14px 40px rgba(130,150,200,.2),inset 0 1px 0 rgba(255,255,255,1),inset 0 -8px 20px rgba(180,200,240,.15);}
+  .card-label{font-size:12px;letter-spacing:.04em;color:var(--muted);margin-bottom:10px;}
+  textarea{width:100%;height:110px;border:none;background:transparent;resize:none;font-family:'Inter';font-size:16px;color:var(--ink);line-height:1.6;outline:none;}
+  textarea::placeholder{color:#9aa3b5;}
+  .hint{font-size:12px;color:#c0667f;margin-top:8px;height:14px;transition:opacity .3s;opacity:0;}
+  .hint.show{opacity:1;}
+  .energy-head{width:100%;display:flex;justify-content:space-between;align-items:baseline;margin:30px 2px 8px;}
+  .energy-head .k{font-family:'Newsreader',serif;font-style:italic;font-size:18px;}
+  .energy-head .v{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+  .energy-sub{width:100%;font-size:12px;color:var(--muted);margin:0 2px 14px;line-height:1.4;}
+  .states{width:100%;display:flex;gap:9px;}
+  .state{flex:1;padding:16px 0 13px;border-radius:18px;border:1px solid rgba(255,255,255,.8);
+    background:linear-gradient(170deg,rgba(255,255,255,.6),rgba(255,255,255,.4));
+    cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:9px;transition:all .4s cubic-bezier(.2,.7,.2,1);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,1);}
+  .state .dot{width:22px;height:22px;border-radius:50%;transition:transform .5s ease;
+    box-shadow:inset 0 3px 5px rgba(255,255,255,.95),inset 0 -2px 4px rgba(120,140,200,.3),0 2px 6px rgba(120,140,200,.3);}
+  .state.on .dot{animation:pulse 2.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1.1);}50%{transform:scale(1.25);}}
+  .state .nm{font-size:10.5px;font-weight:600;color:var(--muted);}
+  .state.on{background:rgba(255,255,255,.95);transform:translateY(-4px);border-color:transparent;box-shadow:0 12px 26px rgba(130,150,200,.25);}
+  .state.on .nm{color:var(--ink);}
+  .s1 .dot{background:linear-gradient(135deg,#8fd6ff,#5fa8e0);}.s2 .dot{background:linear-gradient(135deg,#c6a4f0,#a07ad8);}
+  .s3 .dot{background:linear-gradient(135deg,#ffb0d4,#f080b0);}.s4 .dot{background:linear-gradient(135deg,#ffe08c,#ffb84d);}
+  .cta{margin-top:28px;width:100%;border:none;cursor:pointer;color:#fff;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#6b8ce0,#3a4f9e);padding:18px;border-radius:18px;
+    font-family:'Newsreader',serif;font-size:17px;font-weight:500;transition:transform .2s,opacity .2s;
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.5),inset 0 -4px 8px rgba(20,30,70,.3),0 10px 26px rgba(90,120,210,.4);}
+  .cta::before{content:"";position:absolute;top:0;left:0;right:0;height:48%;background:linear-gradient(to bottom,rgba(255,255,255,.35),transparent);border-radius:18px 18px 0 0;}
+  .cta:active{transform:scale(.985);opacity:.92;}
+  .footnote{margin-top:26px;font-size:11px;color:#9aa3b5;letter-spacing:.04em;text-align:center;}
+  .thinking{width:100%;margin-top:26px;display:none;flex-direction:column;align-items:center;gap:14px;}
+  .thinking.show{display:flex;}
+  .thinking p{font-family:'Newsreader',serif;font-style:italic;font-size:17px;color:var(--muted);text-align:center;}
+  .result{width:100%;margin-top:30px;display:none;}
+  .result.show{display:block;animation:rise .85s cubic-bezier(.2,.7,.2,1) forwards;}
+  .result .rule-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .result .rule-head span{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  .result .rule-head::after{content:"";flex:1;height:1px;background:rgba(31,39,53,.12);}
+  .clarity-card{background:linear-gradient(170deg,rgba(255,255,255,.85),rgba(255,255,255,.6));backdrop-filter:blur(26px);
+    border:1px solid rgba(255,255,255,1);border-radius:24px;padding:26px;
+    box-shadow:0 18px 54px rgba(130,150,200,.22),inset 0 1px 0 rgba(255,255,255,1);}
+  .block{margin-bottom:22px;}
+  .block:last-child{margin-bottom:0;}
+  .block .lbl{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#9aa3b5;font-weight:600;margin-bottom:8px;}
+  .block .ask{font-family:'Newsreader',serif;font-weight:400;font-size:23px;line-height:1.3;letter-spacing:-.01em;}
+  .block ul{list-style:none;}
+  .block li{font-size:15px;line-height:1.5;color:var(--ink);padding-left:18px;position:relative;margin-bottom:8px;}
+  .block li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:#8fb0e8;}
+  .block .sowhat{font-size:15px;line-height:1.6;color:var(--ink);font-style:italic;font-family:'Newsreader',serif;}
+  .divider{height:1px;background:rgba(31,39,53,.1);margin:20px 0;}
+  .rate{margin-top:22px;padding-top:20px;border-top:1px solid rgba(31,39,53,.1);}
+  .rate-q{font-size:13px;color:var(--muted);margin-bottom:12px;text-align:center;}
+  .rate-opts{display:flex;gap:8px;}
+  .rate-opts button{flex:1;padding:11px 6px;border-radius:14px;border:1px solid rgba(31,39,53,.12);background:rgba(255,255,255,.6);
+    cursor:pointer;font-family:'Inter';font-size:12px;font-weight:600;color:var(--muted);transition:all .25s;}
+  .rate-opts button:hover{background:rgba(255,255,255,.9);}
+  .rate-opts button.picked{background:#3a4f9e;color:#fff;border-color:transparent;}
+  .rate-thanks{text-align:center;font-size:13px;color:var(--muted);font-style:italic;font-family:'Newsreader',serif;display:none;}
+  .again{margin-top:18px;width:100%;background:transparent;border:none;cursor:pointer;padding:10px;
+    font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;}
+</style>
+</head>
+<body>
+  <div class="device">
+    <div class="bloom"></div>
+    <div class="swirls"><div class="swirl sw1"></div><div class="swirl sw2"></div></div>
+    <div class="ambient"><div class="a-a"></div><div class="a-b"></div><div class="a-c"></div></div>
+    <div class="content">
+      <div class="masthead reveal d1"><div class="wordmark">Unstuck</div><div class="issue">Clarity in one read</div></div>
+      <div class="stage reveal d2">
+        <div class="glow" id="glow"></div>
+        <div class="orb" id="orb"><div class="gloss"></div><div class="refract"></div></div>
+        <div class="orb-rim"></div>
+        <div class="frag f1"></div><div class="frag f2"></div><div class="frag f3"></div><div class="frag f4"></div><div class="frag f5"></div>
+      </div>
+      <h1 class="reveal d3">The mess in,<br><em>one clear read out.</em></h1>
+      <p class="lede reveal d4">Paste the rambling email, the tangled notes, the thing you cannot parse. I will hand back the real ask, the core pieces, and the so-what.</p>
+
+      <div id="inputZone" style="width:100%;">
+        <div class="card reveal d5"><div class="card-label">Paste the messy thing</div>
+          <textarea id="dump" placeholder="The long email that buries the point. Your own scattered notes. A confusing message. Drop it in exactly as it is."></textarea>
+          <div class="hint" id="hint">Give me a little more to work with.</div>
+        </div>
+        <div class="reveal d6" style="width:100%;">
+          <div class="energy-head"><span class="k">How much should I give you?</span><span class="v" id="enval">Full</span></div>
+          <div class="energy-sub">Matched to your headspace right now. Less when you are fried, the full structure when you have room.</div>
+          <div class="states">
+            <div class="state s1" data-name="Fried"><div class="dot"></div><div class="nm">Just the ask</div></div>
+            <div class="state s2" data-name="Drained"><div class="dot"></div><div class="nm">Ask + points</div></div>
+            <div class="state s3 on" data-name="Charging"><div class="dot"></div><div class="nm">Full read</div></div>
+            <div class="state s4" data-name="Charged"><div class="dot"></div><div class="nm">Full + move</div></div>
+          </div>
+          <button class="cta" id="go">Make it clear</button>
+          <div class="footnote">Real Ask &middot; Core Pieces &middot; So-What &nbsp;|&nbsp; grounded in cognitive load theory</div>
+        </div>
+      </div>
+
+      <div class="thinking" id="thinking"><p id="thinkingText">Reading through the noise</p></div>
+
+      <div class="result" id="result">
+        <div class="rule-head"><span>Here is the clear version</span></div>
+        <div class="clarity-card">
+          <div class="block" id="askBlock"><div class="lbl">The real ask</div><div class="ask" id="askText"></div></div>
+          <div class="block" id="piecesBlock"><div class="lbl">The core pieces</div><ul id="piecesList"></ul></div>
+          <div class="block" id="sowhatBlock"><div class="lbl">The so-what</div><div class="sowhat" id="sowhatText"></div></div>
+          <div class="rate" id="rate">
+            <div class="rate-q" id="rateQ">How much clearer is this now?</div>
+            <div class="rate-opts" id="rateOpts">
+              <button data-v="much">Much clearer</button>
+              <button data-v="bit">A bit</button>
+              <button data-v="not">Not really</button>
+            </div>
+            <div class="rate-thanks" id="rateThanks">Thank you, that helps the pilot.</div>
+          </div>
+        </div>
+        <button class="again" id="again">clear this and start fresh</button>
+      </div>
+    </div>
+  </div>
+<script>
+  const pal={Fried:['#8fd6ff','#7ab8e8','#a0c4f0'],Drained:['#a4c4f0','#c6a4f0','#d8b8f0'],
+    Charging:['#8fd0ff','#c7b4ff','#ffc2e2'],Charged:['#ffe08c','#ffb86e','#ff9ec4']};
+  const glowCol={Fried:'#7ab8e8',Drained:'#b094e0',Charging:'#c7b4ff',Charged:'#ffc28c'};
+  const depthLabel={Fried:'Minimal',Drained:'Light',Charging:'Full',Charged:'Full+'};
+  const root=document.documentElement;
+  let energy='Charging';
+  document.querySelectorAll('.state').forEach(s=>{
+    s.addEventListener('click',()=>{
+      document.querySelectorAll('.state').forEach(x=>x.classList.remove('on'));
+      s.classList.add('on');
+      energy=s.dataset.name;
+      document.getElementById('enval').textContent=depthLabel[energy];
+      const p=pal[energy];
+      root.style.setProperty('--o1',p[0]);root.style.setProperty('--o2',p[1]);root.style.setProperty('--o3',p[2]);
+      document.getElementById('glow').style.background='radial-gradient(circle,'+glowCol[energy]+',transparent 70%)';
+    });
+  });
+  const go=document.getElementById('go');
+  const thinking=document.getElementById('thinking');
+  const result=document.getElementById('result');
+  const inputZone=document.getElementById('inputZone');
+  const orb=document.getElementById('orb');
+  const hint=document.getElementById('hint');
+  const thinkingLines=['Reading through the noise','Sorting what matters','Pulling out the shape'];
+  go.addEventListener('click',async()=>{
+    const dump=document.getElementById('dump').value.trim();
+    if(dump.length<3){hint.textContent='Give me a little more to work with.';hint.classList.add('show');document.getElementById('dump').focus();return;}
+    hint.classList.remove('show');
+    inputZone.style.display='none';
+    result.classList.remove('show');result.style.display='none';
+    thinking.classList.add('show');
+    orb.classList.add('thinking-mode');
+    let i=0;const tt=document.getElementById('thinkingText');
+    const cycle=setInterval(()=>{i=(i+1)%thinkingLines.length;tt.textContent=thinkingLines[i];},1400);
+    try{
+      const res=await fetch('/api/unstuck',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dump,energy})});
+      if(!res.ok)throw new Error('bad');
+      const data=await res.json();
+      clearInterval(cycle);
+      showResult(data);
+    }catch(e){
+      clearInterval(cycle);
+      showResult({
+        the_real_ask:"They need the Q3 figures sent to the finance team before Thursday's noon review.",
+        core_pieces:["Deadline is Thursday 12pm, not end of day","Send to finance team, cc the manager","Use the updated template from last week"],
+        so_what: energy==='Charged' ? "Everything else in the email is context. Reply now confirming Thursday, and block 30 minutes Wednesday to pull the figures." : "Everything else in the email is background. The only action is the Thursday figures."
+      });
+    }
+  });
+  function showResult(data){
+    thinking.classList.remove('show');
+    orb.classList.remove('thinking-mode');
+    document.getElementById('askText').textContent=data.the_real_ask||'';
+    const piecesBlock=document.getElementById('piecesBlock');
+    const piecesList=document.getElementById('piecesList');
+    piecesList.innerHTML='';
+    if(data.core_pieces&&data.core_pieces.length){
+      piecesBlock.style.display='block';
+      data.core_pieces.forEach(p=>{const li=document.createElement('li');li.textContent=p;piecesList.appendChild(li);});
+    }else{piecesBlock.style.display='none';}
+    const sowhatBlock=document.getElementById('sowhatBlock');
+    if(data.so_what&&data.so_what.trim()){sowhatBlock.style.display='block';document.getElementById('sowhatText').textContent=data.so_what;}
+    else{sowhatBlock.style.display='none';}
+    document.querySelectorAll('#rateOpts button').forEach(b=>b.classList.remove('picked'));
+    document.getElementById('rateOpts').style.display='flex';
+    document.getElementById('rateQ').style.display='block';
+    document.getElementById('rateThanks').style.display='none';
+    result.style.display='block';result.classList.add('show');
+    setTimeout(()=>result.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  }
+  document.querySelectorAll('#rateOpts button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#rateOpts button').forEach(x=>x.classList.remove('picked'));
+      b.classList.add('picked');
+      console.log('clarity_rating',{rating:b.dataset.v,energy:energy,t:Date.now()});
+      setTimeout(()=>{
+        document.getElementById('rateOpts').style.display='none';
+        document.getElementById('rateQ').style.display='none';
+        document.getElementById('rateThanks').style.display='block';
+      },350);
+    });
+  });
+  document.getElementById('again').addEventListener('click',()=>{
+    document.getElementById('dump').value='';
+    result.classList.remove('show');result.style.display='none';
+    inputZone.style.display='block';
+    document.getElementById('dump').focus();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+</script>
+</body>
+</html>
