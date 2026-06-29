@@ -40,8 +40,8 @@
     box-shadow:inset 0 -14px 30px rgba(120,140,200,.3),inset 0 12px 26px rgba(255,255,255,.8),0 22px 50px rgba(140,160,220,.4);
     transition:background 1.4s ease;}
   .orb.thinking-mode{animation:breathe 1.8s ease-in-out infinite;}
-  .orb .gloss{position:absolute;top:5%;left:13%;width:74%;height:44%;border-radius:50%;background:linear-gradient(to bottom,rgba(255,255,255,.95),rgba(255,255,255,0));filter:blur(2px);}
-  .orb .refract{position:absolute;bottom:7%;left:22%;width:56%;height:26%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,255,255,0));filter:blur(3px);}
+  .orb .gloss{position:absolute;top:5%;left:13%;width:74%;height:44%;border-radius:50%;background:linear-gradient(to bottom,rgba(255,255,255,.95),rgba(255,255,255,0));filter:blur(2px);pointer-events:none;}
+  .orb .refract{position:absolute;bottom:7%;left:22%;width:56%;height:26%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,255,255,0));filter:blur(3px);pointer-events:none;}
   .orb-rim{position:absolute;width:150px;height:150px;border-radius:50%;pointer-events:none;z-index:3;
     box-shadow:inset 0 2px 4px rgba(255,255,255,.95),inset 0 -3px 6px rgba(120,140,200,.4),inset 0 0 0 1.5px rgba(255,255,255,.7);}
   .frag{position:absolute;border-radius:50%;background:var(--frag);top:50%;left:50%;margin:-3px;box-shadow:0 2px 6px rgba(120,140,210,.4);transition:background 1.4s ease;pointer-events:none;}
@@ -176,6 +176,96 @@
     </div>
   </div>
 <script>
-  const pal={Fried:['#8fd6ff','#7ab8e8','#a0c4f0'],Drained:['#a4c4f0','#c6a4f0','#d8b8f0'],
-    Charging:['#8fd0ff','#c7b4ff','#ffc2e2'],Charged:['#ffe08c','#ffb86e','#ff9ec4']};
-  const glowCol={Fried:'#7ab8e8',Drai
+(function(){
+  var pal={Fried:['#8fd6ff','#7ab8e8','#a0c4f0'],Drained:['#a4c4f0','#c6a4f0','#d8b8f0'],Charging:['#8fd0ff','#c7b4ff','#ffc2e2'],Charged:['#ffe08c','#ffb86e','#ff9ec4']};
+  var glowCol={Fried:'#7ab8e8',Drained:'#b094e0',Charging:'#c7b4ff',Charged:'#ffc28c'};
+  var depthLabel={Fried:'Minimal',Drained:'Light',Charging:'Full',Charged:'Full+'};
+  var root=document.documentElement;
+  var energy='Charging';
+  var thinkingLines=['Reading through the noise','Sorting what matters','Pulling out the shape'];
+
+  function byId(id){return document.getElementById(id);}
+
+  function selectEnergy(stateEl){
+    var states=document.querySelectorAll('.state');
+    for(var i=0;i<states.length;i++){states[i].classList.remove('on');}
+    stateEl.classList.add('on');
+    energy=stateEl.getAttribute('data-name');
+    byId('enval').textContent=depthLabel[energy];
+    var p=pal[energy];
+    root.style.setProperty('--o1',p[0]);root.style.setProperty('--o2',p[1]);root.style.setProperty('--o3',p[2]);
+    byId('glow').style.background='radial-gradient(circle,'+glowCol[energy]+',transparent 70%)';
+  }
+
+  function showResult(data){
+    byId('thinking').classList.remove('show');
+    byId('orb').classList.remove('thinking-mode');
+    byId('askText').textContent=data.the_real_ask||'';
+    var piecesBlock=byId('piecesBlock');var piecesList=byId('piecesList');
+    piecesList.innerHTML='';
+    if(data.core_pieces&&data.core_pieces.length){
+      piecesBlock.style.display='block';
+      for(var i=0;i<data.core_pieces.length;i++){var li=document.createElement('li');li.textContent=data.core_pieces[i];piecesList.appendChild(li);}
+    }else{piecesBlock.style.display='none';}
+    var sowhatBlock=byId('sowhatBlock');
+    if(data.so_what&&data.so_what.trim()){sowhatBlock.style.display='block';byId('sowhatText').textContent=data.so_what;}
+    else{sowhatBlock.style.display='none';}
+    var rb=document.querySelectorAll('#rateOpts button');
+    for(var j=0;j<rb.length;j++){rb[j].classList.remove('picked');}
+    byId('rateOpts').style.display='flex';byId('rateQ').style.display='block';byId('rateThanks').style.display='none';
+    byId('result').style.display='block';byId('result').classList.add('show');
+    setTimeout(function(){byId('result').scrollIntoView({behavior:'smooth',block:'start'});},100);
+  }
+
+  function runClarify(){
+    var dump=byId('dump').value.trim();
+    var hint=byId('hint');
+    if(dump.length<3){hint.textContent='Give me a little more to work with.';hint.classList.add('show');byId('dump').focus();return;}
+    hint.classList.remove('show');
+    byId('inputZone').style.display='none';
+    byId('result').classList.remove('show');byId('result').style.display='none';
+    byId('thinking').classList.add('show');
+    byId('orb').classList.add('thinking-mode');
+    var i=0;var tt=byId('thinkingText');
+    var cycle=setInterval(function(){i=(i+1)%thinkingLines.length;tt.textContent=thinkingLines[i];},1400);
+    fetch('/api/unstuck',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dump:dump,energy:energy})})
+      .then(function(res){if(!res.ok){throw new Error('bad');}return res.json();})
+      .then(function(data){clearInterval(cycle);showResult(data);})
+      .catch(function(e){
+        clearInterval(cycle);
+        showResult({
+          the_real_ask:"They need the Q3 figures sent to the finance team before Thursday's noon review.",
+          core_pieces:["Deadline is Thursday 12pm, not end of day","Send to finance team, cc the manager","Use the updated template from last week"],
+          so_what: energy==='Charged' ? "Everything else in the email is context. Reply now confirming Thursday, and block 30 minutes Wednesday to pull the figures." : "Everything else in the email is background. The only action is the Thursday figures."
+        });
+      });
+  }
+
+  function resetAll(){
+    byId('dump').value='';
+    byId('result').classList.remove('show');byId('result').style.display='none';
+    byId('inputZone').style.display='block';
+    byId('dump').focus();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  document.addEventListener('click',function(ev){
+    var t=ev.target;
+    var stateEl=t.closest ? t.closest('.state') : null;
+    if(stateEl){selectEnergy(stateEl);return;}
+    if(t.closest && t.closest('#go')){runClarify();return;}
+    if(t.closest && t.closest('#again')){resetAll();return;}
+    var rateBtn=t.closest ? t.closest('#rateOpts button') : null;
+    if(rateBtn){
+      var rb=document.querySelectorAll('#rateOpts button');
+      for(var k=0;k<rb.length;k++){rb[k].classList.remove('picked');}
+      rateBtn.classList.add('picked');
+      try{console.log('clarity_rating',{rating:rateBtn.getAttribute('data-v'),energy:energy,t:Date.now()});}catch(e){}
+      setTimeout(function(){byId('rateOpts').style.display='none';byId('rateQ').style.display='none';byId('rateThanks').style.display='block';},350);
+      return;
+    }
+  });
+})();
+</script>
+</body>
+</html>
