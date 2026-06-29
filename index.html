@@ -12,17 +12,17 @@
   body{font-family:'Inter',sans-serif;color:var(--ink);display:flex;justify-content:center;overflow-x:hidden;overflow-y:auto;background:#dfeaf4;min-height:100vh;}
   .device{width:100%;max-width:440px;min-height:100vh;position:relative;overflow:visible;
     background:linear-gradient(165deg,#cfe7fb 0%,#e3e6fb 40%,#f3e4f3 70%,#e8f3ff 100%);}
-  .bloom{position:fixed;top:60px;left:50%;transform:translateX(-50%);width:300px;height:160px;z-index:0;
+  .bloom{position:fixed;top:60px;left:50%;transform:translateX(-50%);width:300px;height:160px;z-index:0;pointer-events:none;
     background:radial-gradient(ellipse,rgba(255,255,255,.85),transparent 70%);filter:blur(20px);opacity:.7;}
-  .swirls{position:fixed;inset:0;z-index:0;max-width:440px;margin:0 auto;overflow:hidden;}
+  .swirls{position:fixed;inset:0;z-index:0;max-width:440px;margin:0 auto;overflow:hidden;pointer-events:none;}
   .swirl{position:absolute;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);opacity:.4;}
   .sw1{width:520px;height:520px;top:-180px;left:-160px;border-color:rgba(180,210,255,.4);transform:rotate(20deg);}
   .sw2{width:440px;height:440px;top:-120px;right:-200px;border-color:rgba(220,200,255,.35);}
-  .ambient{position:fixed;inset:0;z-index:0;max-width:440px;margin:0 auto;filter:blur(55px);opacity:.5;}
+  .ambient{position:fixed;inset:0;z-index:0;max-width:440px;margin:0 auto;filter:blur(55px);opacity:.5;pointer-events:none;}
   .a-a{position:absolute;width:300px;height:300px;border-radius:50%;top:-30px;left:-50px;background:#a8d8ff;}
   .a-b{position:absolute;width:280px;height:280px;border-radius:50%;top:70px;right:-60px;background:#e2c2ff;}
   .a-c{position:absolute;width:260px;height:260px;border-radius:50%;bottom:-40px;left:30px;background:#ffd0ea;}
-  .content{position:relative;z-index:2;padding:54px 30px 60px;display:flex;flex-direction:column;align-items:center;}
+  .content{position:relative;z-index:5;padding:54px 30px 60px;display:flex;flex-direction:column;align-items:center;}
   .reveal{opacity:0;transform:translateY(14px);animation:rise 1s cubic-bezier(.2,.7,.2,1) forwards;}
   .d1{animation-delay:.1s}.d2{animation-delay:.7s}.d3{animation-delay:1.7s}.d4{animation-delay:1.9s}.d5{animation-delay:2.1s}.d6{animation-delay:2.3s}
   @keyframes rise{to{opacity:1;transform:translateY(0);}}
@@ -44,7 +44,7 @@
   .orb .refract{position:absolute;bottom:7%;left:22%;width:56%;height:26%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,255,255,0));filter:blur(3px);}
   .orb-rim{position:absolute;width:150px;height:150px;border-radius:50%;pointer-events:none;z-index:3;
     box-shadow:inset 0 2px 4px rgba(255,255,255,.95),inset 0 -3px 6px rgba(120,140,200,.4),inset 0 0 0 1.5px rgba(255,255,255,.7);}
-  .frag{position:absolute;border-radius:50%;background:var(--frag);top:50%;left:50%;margin:-3px;box-shadow:0 2px 6px rgba(120,140,210,.4);transition:background 1.4s ease;}
+  .frag{position:absolute;border-radius:50%;background:var(--frag);top:50%;left:50%;margin:-3px;box-shadow:0 2px 6px rgba(120,140,210,.4);transition:background 1.4s ease;pointer-events:none;}
   @keyframes orbit{to{transform:rotate(360deg) translateX(108px) rotate(-360deg);}}
   .f1{width:7px;height:7px;animation:orbit 8s linear infinite;}.f2{width:5px;height:5px;animation:orbit 11s linear infinite reverse;}
   .f3{width:6px;height:6px;animation:orbit 9.5s linear infinite;}.f4{width:4px;height:4px;animation:orbit 13s linear infinite reverse;}
@@ -70,11 +70,11 @@
     background:linear-gradient(170deg,rgba(255,255,255,.6),rgba(255,255,255,.4));
     cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:9px;transition:all .4s cubic-bezier(.2,.7,.2,1);
     box-shadow:inset 0 1px 0 rgba(255,255,255,1);}
-  .state .dot{width:22px;height:22px;border-radius:50%;transition:transform .5s ease;
+  .state .dot{width:22px;height:22px;border-radius:50%;transition:transform .5s ease;pointer-events:none;
     box-shadow:inset 0 3px 5px rgba(255,255,255,.95),inset 0 -2px 4px rgba(120,140,200,.3),0 2px 6px rgba(120,140,200,.3);}
   .state.on .dot{animation:pulse 2.6s ease-in-out infinite;}
   @keyframes pulse{0%,100%{transform:scale(1.1);}50%{transform:scale(1.25);}}
-  .state .nm{font-size:10.5px;font-weight:600;color:var(--muted);}
+  .state .nm{font-size:10.5px;font-weight:600;color:var(--muted);pointer-events:none;}
   .state.on{background:rgba(255,255,255,.95);transform:translateY(-4px);border-color:transparent;box-shadow:0 12px 26px rgba(130,150,200,.25);}
   .state.on .nm{color:var(--ink);}
   .s1 .dot{background:linear-gradient(135deg,#8fd6ff,#5fa8e0);}.s2 .dot{background:linear-gradient(135deg,#c6a4f0,#a07ad8);}
@@ -83,7 +83,7 @@
     background:linear-gradient(135deg,#6b8ce0,#3a4f9e);padding:18px;border-radius:18px;
     font-family:'Newsreader',serif;font-size:17px;font-weight:500;transition:transform .2s,opacity .2s;
     box-shadow:inset 0 2px 0 rgba(255,255,255,.5),inset 0 -4px 8px rgba(20,30,70,.3),0 10px 26px rgba(90,120,210,.4);}
-  .cta::before{content:"";position:absolute;top:0;left:0;right:0;height:48%;background:linear-gradient(to bottom,rgba(255,255,255,.35),transparent);border-radius:18px 18px 0 0;}
+  .cta::before{content:"";position:absolute;top:0;left:0;right:0;height:48%;background:linear-gradient(to bottom,rgba(255,255,255,.35),transparent);border-radius:18px 18px 0 0;pointer-events:none;}
   .cta:active{transform:scale(.985);opacity:.92;}
   .footnote{margin-top:26px;font-size:11px;color:#9aa3b5;letter-spacing:.04em;text-align:center;}
   .thinking{width:100%;margin-top:26px;display:none;flex-direction:column;align-items:center;gap:14px;}
@@ -166,4 +166,16 @@
             <div class="rate-opts" id="rateOpts">
               <button data-v="much">Much clearer</button>
               <button data-v="bit">A bit</button>
-              <button data-v="not">Not
+              <button data-v="not">Not really</button>
+            </div>
+            <div class="rate-thanks" id="rateThanks">Thank you, that helps the pilot.</div>
+          </div>
+        </div>
+        <button class="again" id="again">clear this and start fresh</button>
+      </div>
+    </div>
+  </div>
+<script>
+  const pal={Fried:['#8fd6ff','#7ab8e8','#a0c4f0'],Drained:['#a4c4f0','#c6a4f0','#d8b8f0'],
+    Charging:['#8fd0ff','#c7b4ff','#ffc2e2'],Charged:['#ffe08c','#ffb86e','#ff9ec4']};
+  const glowCol={Fried:'#7ab8e8',Drai
